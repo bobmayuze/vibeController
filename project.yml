@@ -1,0 +1,35 @@
+name: VibeController
+options:
+  bundleIdPrefix: com.vibecontroller
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  
+settings:
+  SWIFT_VERSION: "5.9"
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
+  
+targets:
+  VibeController:
+    type: application
+    platform: macOS
+    sources:
+      - path: VibeController
+        excludes:
+          - "**/*.entitlements"
+          - "**/*.plist"
+    resources:
+      - path: VibeController/Resources/Assets.xcassets
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.vibecontroller.app
+      PRODUCT_NAME: Vibe Controller
+      INFOPLIST_FILE: VibeController/Resources/Info.plist
+      CODE_SIGN_ENTITLEMENTS: VibeController/Resources/VibeController.entitlements
+      CODE_SIGN_STYLE: Automatic
+      DEVELOPMENT_TEAM: ""
+      ENABLE_HARDENED_RUNTIME: NO
+      ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: VibeController/Resources/Info.plist
+    entitlements:
+      path: VibeController/Resources/VibeController.entitlements

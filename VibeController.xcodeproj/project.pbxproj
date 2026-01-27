@@ -1,0 +1,398 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 63;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		16CA9BBB001D4F783395B9BE /* ButtonLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30E2306A6B19D9E0DE88A8CE /* ButtonLabelView.swift */; };
+		322B1A7BD8DB9AA79D9C81C3 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5A06A2C543B65C84B65CF676 /* Assets.xcassets */; };
+		3257B83D7E54123F8A9CABAB /* ControllerInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F3C8C2E06D8AF39B0F73F2 /* ControllerInput.swift */; };
+		52788FA0E43F60DA2937D2F8 /* AppController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A2133BFE7852A180275D46 /* AppController.swift */; };
+		6049398324B69FC99AD12441 /* ActionEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 289E8D4446326DA883133C1E /* ActionEditorSheet.swift */; };
+		A74DE8EF12E456D45F1FEA60 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0239D9BFACB73325C3196468 /* Config.swift */; };
+		B7D7A608C846A13FF4A9596A /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B169E8F00D957842B9EDE2FF /* MenuBarView.swift */; };
+		BCF2CE0698474C0F3314426B /* Action.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5A5D036935A1E41381B6180 /* Action.swift */; };
+		C1E9666207AB3A49F9EACDC2 /* VibeControllerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6FA7C7E209FB2D639AC61CF /* VibeControllerApp.swift */; };
+		CFD5C125EFFCE97EE75ECF73 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1E0F11B4B5EA7A8DD457E8C /* SettingsView.swift */; };
+		D0C555B6AC947F89777B35FB /* ControllerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75D005A58ACD9F1065F5EE0F /* ControllerManager.swift */; };
+		D6DCD2D5247BC5384DFD264C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 286DC764528915D433DE65B9 /* AppDelegate.swift */; };
+		E0EF75E23D597CFC65A0951C /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928882D5595A6565FD2DBA7F /* ConfigManager.swift */; };
+		E794FCC7E2CE0CBB7C11E94C /* ActionExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D0997EB562AFBC37C7E56FF /* ActionExecutor.swift */; };
+		F74684809432CB29062F4236 /* ControllerMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D071E90B9E5BEA55B647E022 /* ControllerMapView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0239D9BFACB73325C3196468 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		286DC764528915D433DE65B9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		289E8D4446326DA883133C1E /* ActionEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionEditorSheet.swift; sourceTree = "<group>"; };
+		30E2306A6B19D9E0DE88A8CE /* ButtonLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonLabelView.swift; sourceTree = "<group>"; };
+		33F29593C7A310253CFC16B2 /* Vibe Controller.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vibe Controller.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		35F3C8C2E06D8AF39B0F73F2 /* ControllerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerInput.swift; sourceTree = "<group>"; };
+		5A06A2C543B65C84B65CF676 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		67A2133BFE7852A180275D46 /* AppController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppController.swift; sourceTree = "<group>"; };
+		6D0997EB562AFBC37C7E56FF /* ActionExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionExecutor.swift; sourceTree = "<group>"; };
+		75D005A58ACD9F1065F5EE0F /* ControllerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerManager.swift; sourceTree = "<group>"; };
+		928882D5595A6565FD2DBA7F /* ConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigManager.swift; sourceTree = "<group>"; };
+		B169E8F00D957842B9EDE2FF /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
+		B1E0F11B4B5EA7A8DD457E8C /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		C6FA7C7E209FB2D639AC61CF /* VibeControllerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeControllerApp.swift; sourceTree = "<group>"; };
+		D071E90B9E5BEA55B647E022 /* ControllerMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerMapView.swift; sourceTree = "<group>"; };
+		D5A5D036935A1E41381B6180 /* Action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Action.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		214037E4EBE892607420E31B /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D5A5D036935A1E41381B6180 /* Action.swift */,
+				0239D9BFACB73325C3196468 /* Config.swift */,
+				35F3C8C2E06D8AF39B0F73F2 /* ControllerInput.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		26B7779A0C3CB76B45A0DB23 = {
+			isa = PBXGroup;
+			children = (
+				B3E2AF7DBFF2890A8527BCB0 /* VibeController */,
+				6B27FA2226D2691964F2AA5B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4CF856BBAAEFD3F65A6C49DA /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				5A06A2C543B65C84B65CF676 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		5EB97A65881F7D37E04E202F /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				6D0997EB562AFBC37C7E56FF /* ActionExecutor.swift */,
+				67A2133BFE7852A180275D46 /* AppController.swift */,
+				928882D5595A6565FD2DBA7F /* ConfigManager.swift */,
+				75D005A58ACD9F1065F5EE0F /* ControllerManager.swift */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		68C44B29A36BA9D3AE04CF27 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				286DC764528915D433DE65B9 /* AppDelegate.swift */,
+				C6FA7C7E209FB2D639AC61CF /* VibeControllerApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		6B27FA2226D2691964F2AA5B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				33F29593C7A310253CFC16B2 /* Vibe Controller.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B3E2AF7DBFF2890A8527BCB0 /* VibeController */ = {
+			isa = PBXGroup;
+			children = (
+				68C44B29A36BA9D3AE04CF27 /* App */,
+				5EB97A65881F7D37E04E202F /* Controllers */,
+				214037E4EBE892607420E31B /* Models */,
+				4CF856BBAAEFD3F65A6C49DA /* Resources */,
+				BF869157409FDBCAFE510B41 /* Views */,
+			);
+			path = VibeController;
+			sourceTree = "<group>";
+		};
+		BF869157409FDBCAFE510B41 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				289E8D4446326DA883133C1E /* ActionEditorSheet.swift */,
+				30E2306A6B19D9E0DE88A8CE /* ButtonLabelView.swift */,
+				D071E90B9E5BEA55B647E022 /* ControllerMapView.swift */,
+				B169E8F00D957842B9EDE2FF /* MenuBarView.swift */,
+				B1E0F11B4B5EA7A8DD457E8C /* SettingsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D36B56C1A41BE753C4237EF4 /* VibeController */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8ECCFEBDD957B6EFFFFAF15F /* Build configuration list for PBXNativeTarget "VibeController" */;
+			buildPhases = (
+				9E7DAABBDC733EA68F90CBB6 /* Sources */,
+				FC6376D66B470D8D8800E54D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = VibeController;
+			packageProductDependencies = (
+			);
+			productName = VibeController;
+			productReference = 33F29593C7A310253CFC16B2 /* Vibe Controller.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0769887F9D32BC9B2186A8E9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+			};
+			buildConfigurationList = BA4C5CED31B2C0CA699FA40F /* Build configuration list for PBXProject "VibeController" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 26B7779A0C3CB76B45A0DB23;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D36B56C1A41BE753C4237EF4 /* VibeController */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FC6376D66B470D8D8800E54D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				322B1A7BD8DB9AA79D9C81C3 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		9E7DAABBDC733EA68F90CBB6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BCF2CE0698474C0F3314426B /* Action.swift in Sources */,
+				6049398324B69FC99AD12441 /* ActionEditorSheet.swift in Sources */,
+				E794FCC7E2CE0CBB7C11E94C /* ActionExecutor.swift in Sources */,
+				52788FA0E43F60DA2937D2F8 /* AppController.swift in Sources */,
+				D6DCD2D5247BC5384DFD264C /* AppDelegate.swift in Sources */,
+				16CA9BBB001D4F783395B9BE /* ButtonLabelView.swift in Sources */,
+				A74DE8EF12E456D45F1FEA60 /* Config.swift in Sources */,
+				E0EF75E23D597CFC65A0951C /* ConfigManager.swift in Sources */,
+				3257B83D7E54123F8A9CABAB /* ControllerInput.swift in Sources */,
+				D0C555B6AC947F89777B35FB /* ControllerManager.swift in Sources */,
+				F74684809432CB29062F4236 /* ControllerMapView.swift in Sources */,
+				B7D7A608C846A13FF4A9596A /* MenuBarView.swift in Sources */,
+				CFD5C125EFFCE97EE75ECF73 /* SettingsView.swift in Sources */,
+				C1E9666207AB3A49F9EACDC2 /* VibeControllerApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1D5F14EBE53395BDED44265F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = VibeController/Resources/VibeController.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 2RS4MN6F35;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = VibeController/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vibecontroller.app;
+				PRODUCT_NAME = "Vibe Controller";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		375C5A2324DB62939E2D1EA2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		5172DFEC7DA10DFC7E4E9CD9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = VibeController/Resources/VibeController.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 2RS4MN6F35;
+				ENABLE_HARDENED_RUNTIME = NO;
+				INFOPLIST_FILE = VibeController/Resources/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.vibecontroller.app;
+				PRODUCT_NAME = "Vibe Controller";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		59F8F6D1EF148389A117548F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8ECCFEBDD957B6EFFFFAF15F /* Build configuration list for PBXNativeTarget "VibeController" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5172DFEC7DA10DFC7E4E9CD9 /* Debug */,
+				1D5F14EBE53395BDED44265F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		BA4C5CED31B2C0CA699FA40F /* Build configuration list for PBXProject "VibeController" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				59F8F6D1EF148389A117548F /* Debug */,
+				375C5A2324DB62939E2D1EA2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0769887F9D32BC9B2186A8E9 /* Project object */;
+}

@@ -1,0 +1,139 @@
+import Foundation
+import Carbon.HIToolbox
+
+// MARK: - 动作类型
+
+enum ActionType: String, Codable, CaseIterable {
+    case mouseClick = "click"
+    case shortcut = "shortcut"
+    case command = "command"
+    case text = "text"
+    case mouseMove = "mouseMove"
+    case scroll = "scroll"
+    case none = "none"
+    
+    var displayName: String {
+        switch self {
+        case .mouseClick: return "鼠标点击"
+        case .shortcut: return "键盘快捷键"
+        case .command: return "运行命令"
+        case .text: return "输入文本"
+        case .mouseMove: return "鼠标移动"
+        case .scroll: return "滚动"
+        case .none: return "无动作"
+        }
+    }
+}
+
+// MARK: - 鼠标按钮
+
+enum MouseButton: String, Codable, CaseIterable {
+    case left
+    case right
+    case middle
+    
+    var displayName: String {
+        switch self {
+        case .left: return "左键"
+        case .right: return "右键"
+        case .middle: return "中键"
+        }
+    }
+}
+
+// MARK: - 修饰键
+
+struct ModifierKeys: OptionSet, Codable, Hashable {
+    let rawValue: Int
+    
+    static let command = ModifierKeys(rawValue: 1 << 0)
+    static let option = ModifierKeys(rawValue: 1 << 1)
+    static let control = ModifierKeys(rawValue: 1 << 2)
+    static let shift = ModifierKeys(rawValue: 1 << 3)
+    
+    var displayString: String {
+        var parts: [String] = []
+        if contains(.control) { parts.append("⌃") }
+        if contains(.option) { parts.append("⌥") }
+        if contains(.shift) { parts.append("⇧") }
+        if contains(.command) { parts.append("⌘") }
+        return parts.joined()
+    }
+    
+    var cgEventFlags: CGEventFlags {
+        var flags: CGEventFlags = []
+        if contains(.command) { flags.insert(.maskCommand) }
+        if contains(.option) { flags.insert(.maskAlternate) }
+        if contains(.control) { flags.insert(.maskControl) }
+        if contains(.shift) { flags.insert(.maskShift) }
+        return flags
+    }
+}
+
+// MARK: - 动作定义
+
+struct Action: Codable, Equatable, Hashable {
+    var type: ActionType
+    var mouseButton: MouseButton?
+    var modifiers: ModifierKeys?
+    var keyCode: Int?
+    var keyDisplay: String?
+    var commandString: String?
+    var textToType: String?
+    
+    // 预设动作
+    static let leftClick = Action(type: .mouseClick, mouseButton: .left)
+    static let rightClick = Action(type: .mouseClick, mouseButton: .right)
+    static let none = Action(type: .none)
+    
+    static func shortcut(modifiers: ModifierKeys, keyCode: Int, display: String) -> Action {
+        Action(type: .shortcut, modifiers: modifiers, keyCode: keyCode, keyDisplay: display)
+    }
+    
+    static func command(_ cmd: String) -> Action {
+        Action(type: .command, commandString: cmd)
+    }
+    
+    static func text(_ text: String) -> Action {
+        Action(type: .text, textToType: text)
+    }
+    
+    var displayName: String {
+        switch type {
+        case .mouseClick:
+            return mouseButton?.displayName ?? "点击"
+        case .shortcut:
+            let mods = modifiers?.displayString ?? ""
+            let key = keyDisplay ?? ""
+            return "\(mods)\(key)"
+        case .command:
+            return commandString ?? "命令"
+        case .text:
+            let preview = textToType?.prefix(10) ?? ""
+            return "输入: \(preview)"
+        case .mouseMove:
+            return "鼠标移动"
+        case .scroll:
+            return "滚动"
+        case .none:
+            return "无"
+        }
+    }
+}
+
+// MARK: - 常用快捷键 KeyCode
+
+struct KeyCodes {
+    static let a: Int = Int(kVK_ANSI_A)
+    static let b: Int = Int(kVK_ANSI_B)
+    static let c: Int = Int(kVK_ANSI_C)
+    static let p: Int = Int(kVK_ANSI_P)
+    static let v: Int = Int(kVK_ANSI_V)
+    static let z: Int = Int(kVK_ANSI_Z)
+    static let returnKey: Int = Int(kVK_Return)
+    static let escape: Int = Int(kVK_Escape)
+    static let upArrow: Int = Int(kVK_UpArrow)
+    static let downArrow: Int = Int(kVK_DownArrow)
+    static let leftArrow: Int = Int(kVK_LeftArrow)
+    static let rightArrow: Int = Int(kVK_RightArrow)
+}

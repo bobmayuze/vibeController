@@ -68,6 +68,12 @@
 - **CoreGraphics** - 模拟鼠标和键盘操作
 - **MenuBarExtra** - 状态栏常驻
 
+## 推荐工具
+
+配合 Vibe Controller 使用语音输入，推荐 [Handy](https://github.com/cjpais/Handy) - 一个免费、开源、注重隐私的离线语音转文字应用。
+
 ## License
 
-MIT
+MIT License © 2026 [Yuze Ma](mailto:yuze.bob.ma@gmail.com)
+
+详见 [LICENSE](LICENSE)。

@@ -68,6 +68,12 @@
 - **CoreGraphics** - 模擬滑鼠和鍵盤操作
 - **MenuBarExtra** - 狀態列常駐
 
+## 推薦工具
+
+配合 Vibe Controller 使用語音輸入，推薦 [Handy](https://github.com/cjpais/Handy) - 一個免費、開源、注重隱私的離線語音轉文字應用程式。
+
 ## License
 
-MIT
+MIT License © 2026 [Yuze Ma](mailto:yuze.bob.ma@gmail.com)
+
+詳見 [LICENSE](LICENSE)。

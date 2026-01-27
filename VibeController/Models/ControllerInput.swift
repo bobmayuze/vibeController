@@ -102,3 +102,47 @@ struct ControllerInfo: Identifiable {
     let vendorName: String?
     var isConnected: Bool
 }
+
+// MARK: - 组合键
+
+struct ButtonChord: Hashable, Codable, Identifiable {
+    var modifiers: Set<ControllerButton>  // 修饰按钮集合 (如 LT+LB)
+    var button: ControllerButton          // 主按钮 (如 D-pad Up)
+    
+    // 兼容旧版单修饰键的初始化
+    init(modifier: ControllerButton, button: ControllerButton) {
+        self.modifiers = [modifier]
+        self.button = button
+    }
+    
+    init(modifiers: Set<ControllerButton>, button: ControllerButton) {
+        self.modifiers = modifiers
+        self.button = button
+    }
+    
+    var id: String {
+        let sortedModifiers = modifiers.map { $0.rawValue }.sorted().joined(separator: "+")
+        return "\(sortedModifiers)+\(button.rawValue)"
+    }
+    
+    var displayName: String {
+        let modifierNames = modifiers.sorted { $0.rawValue < $1.rawValue }.map { $0.shortName }.joined(separator: " + ")
+        return "\(modifierNames) + \(button.shortName)"
+    }
+    
+    // 兼容旧代码的 modifier 属性（返回第一个修饰键）
+    var modifier: ControllerButton {
+        modifiers.first ?? .leftTrigger
+    }
+    
+    // 预设的修饰按钮（可作为组合键的修饰器）
+    static let modifierButtons: [ControllerButton] = [
+        .leftTrigger, .rightTrigger, .leftBumper, .rightBumper
+    ]
+    
+    // 可被修饰的按钮
+    static let modifiableButtons: [ControllerButton] = [
+        .dpadUp, .dpadDown, .dpadLeft, .dpadRight,
+        .buttonA, .buttonB, .buttonX, .buttonY
+    ]
+}

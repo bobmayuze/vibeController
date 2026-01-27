@@ -14,8 +14,19 @@ class ConfigManager: ObservableObject {
     private let currentConfigIdKey = "CurrentConfigId"
     
     private init() {
+        // 先创建一个临时默认配置，loadConfigs 会覆盖它
         currentConfig = .default
         loadConfigs()
+        
+        // 确保 currentConfig 在 configs 数组中
+        if !configs.contains(where: { $0.id == currentConfig.id }) {
+            if configs.isEmpty {
+                configs = [currentConfig]
+            } else {
+                currentConfig = configs[0]
+            }
+            saveConfigs()
+        }
     }
     
     // MARK: - 配置管理
@@ -59,16 +70,37 @@ class ConfigManager: ObservableObject {
         updateConfig(currentConfig)
     }
     
+    // MARK: - 组合键映射
+    
+    func action(for chord: ButtonChord) -> Action {
+        currentConfig.action(for: chord)
+    }
+    
+    func setAction(_ action: Action, for chord: ButtonChord) {
+        currentConfig.setAction(action, for: chord)
+        updateConfig(currentConfig)
+    }
+    
+    var allChords: [ButtonChord] {
+        Array(currentConfig.chordMappings.keys).sorted { $0.displayName < $1.displayName }
+    }
+    
     // MARK: - 持久化
     
     private func loadConfigs() {
         if let data = UserDefaults.standard.data(forKey: configsKey),
            let decoded = try? JSONDecoder().decode([ControllerConfig].self, from: data) {
             configs = decoded
+            print("✅ 已加载 \(decoded.count) 个配置")
+            for config in decoded {
+                print("   - \(config.name): \(config.chordMappings.count) 个组合键")
+            }
         }
         
         if configs.isEmpty {
-            configs = [.default]
+            let defaultConfig = ControllerConfig.default
+            configs = [defaultConfig]
+            print("✅ 创建默认配置，包含 \(defaultConfig.chordMappings.count) 个组合键")
         }
         
         // 加载当前选中的配置
@@ -79,6 +111,8 @@ class ConfigManager: ObservableObject {
         } else {
             currentConfig = configs[0]
         }
+        
+        print("✅ 当前配置: \(currentConfig.name), 组合键数量: \(currentConfig.chordMappings.count)")
     }
     
     private func saveConfigs() {
@@ -111,6 +145,7 @@ class ConfigManager: ObservableObject {
         let newConfig = ControllerConfig(
             name: name,
             mappings: base.mappings,
+            chordMappings: base.chordMappings,
             settings: base.settings
         )
         addConfig(newConfig)

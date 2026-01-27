@@ -6,12 +6,14 @@ struct ControllerConfig: Codable, Identifiable {
     var id: UUID
     var name: String
     var mappings: [ControllerButton: Action]
+    var chordMappings: [ButtonChord: Action]  // 组合键映射
     var settings: ControllerSettings
     
-    init(id: UUID = UUID(), name: String, mappings: [ControllerButton: Action], settings: ControllerSettings = .default) {
+    init(id: UUID = UUID(), name: String, mappings: [ControllerButton: Action], chordMappings: [ButtonChord: Action] = [:], settings: ControllerSettings = .default) {
         self.id = id
         self.name = name
         self.mappings = mappings
+        self.chordMappings = chordMappings
         self.settings = settings
     }
     
@@ -19,14 +21,26 @@ struct ControllerConfig: Codable, Identifiable {
         mappings[button] ?? .none
     }
     
+    func action(for chord: ButtonChord) -> Action {
+        chordMappings[chord] ?? .none
+    }
+    
     mutating func setAction(_ action: Action, for button: ControllerButton) {
         mappings[button] = action
+    }
+    
+    mutating func setAction(_ action: Action, for chord: ButtonChord) {
+        if action.type == .none {
+            chordMappings.removeValue(forKey: chord)
+        } else {
+            chordMappings[chord] = action
+        }
     }
     
     // MARK: - Codable
     
     enum CodingKeys: String, CodingKey {
-        case id, name, mappings, settings
+        case id, name, mappings, chordMappings, settings
     }
     
     init(from decoder: Decoder) throws {
@@ -44,6 +58,39 @@ struct ControllerConfig: Codable, Identifiable {
             }
         }
         mappings = buttonMappings
+        
+        // 解码 chordMappings
+        if let chordStringMappings = try container.decodeIfPresent([String: Action].self, forKey: .chordMappings) {
+            var chordButtonMappings: [ButtonChord: Action] = [:]
+            for (key, value) in chordStringMappings {
+                let parts = key.split(separator: "+").map { String($0) }
+                guard parts.count >= 2 else { continue }
+                
+                // 最后一个是主按钮，前面的都是修饰键
+                let buttonRawValue = parts.last!
+                let modifierRawValues = parts.dropLast()
+                
+                guard let button = ControllerButton(rawValue: buttonRawValue) else { continue }
+                
+                var modifiers: Set<ControllerButton> = []
+                var validModifiers = true
+                for modRaw in modifierRawValues {
+                    if let mod = ControllerButton(rawValue: modRaw) {
+                        modifiers.insert(mod)
+                    } else {
+                        validModifiers = false
+                        break
+                    }
+                }
+                
+                if validModifiers && !modifiers.isEmpty {
+                    chordButtonMappings[ButtonChord(modifiers: modifiers, button: button)] = value
+                }
+            }
+            chordMappings = chordButtonMappings
+        } else {
+            chordMappings = [:]
+        }
     }
     
     func encode(to encoder: Encoder) throws {
@@ -58,6 +105,13 @@ struct ControllerConfig: Codable, Identifiable {
             stringMappings[key.rawValue] = value
         }
         try container.encode(stringMappings, forKey: .mappings)
+        
+        // 编码 chordMappings
+        var chordStringMappings: [String: Action] = [:]
+        for (chord, action) in chordMappings {
+            chordStringMappings[chord.id] = action
+        }
+        try container.encode(chordStringMappings, forKey: .chordMappings)
     }
 }
 
@@ -111,9 +165,17 @@ extension ControllerConfig {
         mappings[.startButton] = .shortcut(modifiers: [.command, .shift], keyCode: KeyCodes.p, display: "P")
         mappings[.backButton] = .shortcut(modifiers: .command, keyCode: KeyCodes.b, display: "B")
         
+        // 组合键 - LT + D-pad = Shift + 方向键（精细选择文字）
+        var chords: [ButtonChord: Action] = [:]
+        chords[ButtonChord(modifier: .leftTrigger, button: .dpadUp)] = .shortcut(modifiers: .shift, keyCode: KeyCodes.upArrow, display: "↑")
+        chords[ButtonChord(modifier: .leftTrigger, button: .dpadDown)] = .shortcut(modifiers: .shift, keyCode: KeyCodes.downArrow, display: "↓")
+        chords[ButtonChord(modifier: .leftTrigger, button: .dpadLeft)] = .shortcut(modifiers: .shift, keyCode: KeyCodes.leftArrow, display: "←")
+        chords[ButtonChord(modifier: .leftTrigger, button: .dpadRight)] = .shortcut(modifiers: .shift, keyCode: KeyCodes.rightArrow, display: "→")
+        
         return ControllerConfig(
             name: "Default",
             mappings: mappings,
+            chordMappings: chords,
             settings: .default
         )
     }()

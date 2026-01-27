@@ -1,50 +1,60 @@
 # Vibe Controller
 
-用 Xbox 手柄控制 macOS 的系统级工具，类似 BetterTouchTool。
+A system-level tool for controlling macOS with an Xbox controller.
 
-## 功能特性
+**[简体中文](README_zh-CN.md)** | **[繁體中文](README_zh-TW.md)** | **[日本語](README_ja.md)**
 
-- **状态栏常驻** - 关闭窗口后继续后台运行
-- **可视化键位图** - 直观显示当前按键映射
-- **后台运行** - 基于 IOKit HID，窗口失去焦点也能控制
-- **App Switcher** - 按住 Back 键像 Cmd+Tab 一样切换应用
+## Features
 
-## 按键映射
+- **Menu Bar App** - Runs in background after closing window
+- **Visual Button Map** - Intuitive display of current button mappings
+- **Background Operation** - IOKit HID based, works even when window loses focus
+- **App Switcher** - Hold Back button to switch apps like Cmd+Tab
+- **Customizable Mappings** - Configure any button to any action
 
-| 手柄 | 功能 |
-|-----|------|
-| **左摇杆** | 鼠标移动 |
-| **右摇杆** | 滚动 |
-| **A** | 左键点击 |
-| **B** | 右键点击 |
-| **X** | 复制 (⌘C) |
-| **Y** | 粘贴 (⌘V) |
-| **LB** | 撤销 (⌘Z) / App Switcher 时切换上一个 |
-| **RB** | Option+Space / App Switcher 时切换下一个 |
-| **LT** | 拖拽模式（按住拖动文件/文本） |
-| **RT** | 回车 |
-| **L3** | 回车 |
+## Default Button Mappings
+
+| Controller | Function |
+|------------|----------|
+| **Left Stick** | Mouse movement |
+| **Right Stick** | Scroll |
+| **A** | Left click |
+| **B** | Right click |
+| **X** | Copy (⌘C) |
+| **Y** | Paste (⌘V) |
+| **LB** | Undo (⌘Z) / Previous app in App Switcher |
+| **RB** | Option+Space / Next app in App Switcher |
+| **LT** | Drag mode (hold to drag files/text) |
+| **RT** | None |
+| **L3** | Enter |
 | **R3** | Esc |
-| **Start** | 命令面板 (⌘⇧P) |
-| **Back** | App Switcher（按住切换应用） |
-| **D-Pad** | 方向键 |
+| **Start** | Command Palette (⌘⇧P) |
+| **Back** | App Switcher (⌘Tab) |
+| **D-Pad** | Arrow keys |
 
-## App Switcher 使用
+### Chord Mappings (Combos)
 
-1. **按住 Back** → 打开应用切换器
-2. **按住 Back + RB** → 下一个应用
-3. **按住 Back + LB** → 上一个应用  
-4. **松开 Back** → 确认选择
+| Combo | Function |
+|-------|----------|
+| **LT + D-Pad** | Shift + Arrow keys (text selection) |
+| **LT + RT + D-Pad** | Shift + Option + Arrow keys (word selection) |
 
-## 快速开始
+## App Switcher Usage
 
-### 方式一：Xcode 运行
+1. **Hold Back** → Open app switcher
+2. **Hold Back + RB** → Next app
+3. **Hold Back + LB** → Previous app
+4. **Release Back** → Confirm selection
 
-1. 打开 `VibeController.xcodeproj`
-2. 按 Cmd+R 运行
-3. 首次运行授予辅助功能权限
+## Quick Start
 
-### 方式二：命令行服务
+### Option 1: Run with Xcode
+
+1. Open `VibeController.xcodeproj`
+2. Press Cmd+R to run
+3. Grant Accessibility permission on first launch
+
+### Option 2: Command Line Service
 
 ```bash
 cd VibeControllerService
@@ -54,46 +64,18 @@ swiftc -O -o VibeControllerService main.swift \
 ./VibeControllerService
 ```
 
-## 权限要求
+## Permissions
 
-首次运行需要授予辅助功能权限：
+First launch requires Accessibility permission:
 
-**系统设置 → 隐私与安全性 → 辅助功能 → 允许 Vibe Controller**
+**System Settings → Privacy & Security → Accessibility → Allow Vibe Controller**
 
-## 技术实现
+## Tech Stack
 
-- **Swift + SwiftUI** - 原生 macOS 应用
-- **IOKit HID** - 直接读取手柄输入，支持后台运行
-- **CoreGraphics** - 模拟鼠标和键盘操作
-- **MenuBarExtra** - 状态栏常驻
-
-## 项目结构
-
-```
-VibeController/
-├── App/                    # 应用入口
-│   ├── VibeControllerApp.swift
-│   └── AppDelegate.swift
-├── Controllers/            # 控制器
-│   ├── HIDControllerManager.swift  # IOKit HID 手柄管理
-│   ├── ConfigManager.swift         # 配置管理
-│   └── ActionExecutor.swift        # 动作执行
-├── Views/                  # 界面
-│   ├── ControllerMapView.swift     # 键位图主界面
-│   ├── MenuBarView.swift           # 状态栏菜单
-│   └── SettingsView.swift          # 设置面板
-└── Resources/              # 资源文件
-
-VibeControllerService/      # 独立命令行服务
-└── main.swift
-```
-
-## 待实现
-
-- [ ] 可视化配置按键映射（点击保存）
-- [ ] 配置导入/导出
-- [ ] 多配置切换
-- [ ] 打包 DMG 分发
+- **Swift + SwiftUI** - Native macOS app
+- **IOKit HID** - Direct controller input, supports background operation
+- **CoreGraphics** - Mouse and keyboard simulation
+- **MenuBarExtra** - Menu bar integration
 
 ## License
 

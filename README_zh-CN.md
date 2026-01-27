@@ -1,0 +1,82 @@
+# Vibe Controller
+
+用 Xbox 手柄控制 macOS 的系统级工具。
+
+**[English](README.md)** | **[繁體中文](README_zh-TW.md)** | **[日本語](README_ja.md)**
+
+## 功能特性
+
+- **状态栏常驻** - 关闭窗口后继续后台运行
+- **可视化键位图** - 直观显示当前按键映射
+- **后台运行** - 基于 IOKit HID，窗口失去焦点也能控制
+- **App Switcher** - 按住 Back 键像 Cmd+Tab 一样切换应用
+- **自定义映射** - 可配置任意按键到任意动作
+
+## 默认按键映射
+
+| 手柄 | 功能 |
+|-----|------|
+| **左摇杆** | 鼠标移动 |
+| **右摇杆** | 滚动 |
+| **A** | 左键点击 |
+| **B** | 右键点击 |
+| **X** | 复制 (⌘C) |
+| **Y** | 粘贴 (⌘V) |
+| **LB** | 撤销 (⌘Z) / App Switcher 时切换上一个 |
+| **RB** | Option+Space / App Switcher 时切换下一个 |
+| **LT** | 拖拽模式（按住拖动文件/文本） |
+| **RT** | 无动作 |
+| **L3** | 回车 |
+| **R3** | Esc |
+| **Start** | 命令面板 (⌘⇧P) |
+| **Back** | App Switcher (⌘Tab) |
+| **D-Pad** | 方向键 |
+
+### 组合键
+
+| 组合 | 功能 |
+|-----|------|
+| **LT + D-Pad** | Shift + 方向键（文字选择） |
+| **LT + RT + D-Pad** | Shift + Option + 方向键（按词选择） |
+
+## App Switcher 使用
+
+1. **按住 Back** → 打开应用切换器
+2. **按住 Back + RB** → 下一个应用
+3. **按住 Back + LB** → 上一个应用  
+4. **松开 Back** → 确认选择
+
+## 快速开始
+
+### 方式一：Xcode 运行
+
+1. 打开 `VibeController.xcodeproj`
+2. 按 Cmd+R 运行
+3. 首次运行授予辅助功能权限
+
+### 方式二：命令行服务
+
+```bash
+cd VibeControllerService
+swiftc -O -o VibeControllerService main.swift \
+  -framework Foundation -framework IOKit \
+  -framework CoreGraphics -framework AppKit
+./VibeControllerService
+```
+
+## 权限要求
+
+首次运行需要授予辅助功能权限：
+
+**系统设置 → 隐私与安全性 → 辅助功能 → 允许 Vibe Controller**
+
+## 技术实现
+
+- **Swift + SwiftUI** - 原生 macOS 应用
+- **IOKit HID** - 直接读取手柄输入，支持后台运行
+- **CoreGraphics** - 模拟鼠标和键盘操作
+- **MenuBarExtra** - 状态栏常驻
+
+## License
+
+MIT

@@ -157,19 +157,38 @@ class HIDControllerManager: ObservableObject {
         // 扳机
         if usagePage == 0x02 {
             let normalized = normalizePositive(intValue, element: element)
-            if usage == 197 {  // LT - 拖拽
+            if usage == 197 {  // LT
                 let wasActive = leftTrigger > 0.5
                 leftTrigger = normalized
                 DispatchQueue.main.async { self.ltActive = normalized > 0.5 }
-                if normalized > 0.5 && !wasActive { startDrag() }
-                else if normalized <= 0.5 && wasActive { endDrag() }
-            } else if usage == 196 {  // RT - 回车
+                
+                // LT 释放时：如果正在拖拽则结束拖拽
+                if normalized <= 0.5 && wasActive {
+                    if isDragging { endDrag() }
+                }
+                // LT 按下时：执行配置的动作
+                else if normalized > 0.5 && !wasActive {
+                    let action = runOnMain { ConfigManager.shared.currentConfig.action(for: .leftTrigger) }
+                    if action.type == .mouseDrag {
+                        startDrag()
+                    } else if action.type != .none {
+                        print("🔘 LT → \(action.displayName)")
+                        executeAction(action)
+                    }
+                }
+                
+            } else if usage == 196 {  // RT
                 let wasActive = rightTrigger > 0.5
                 rightTrigger = normalized
                 DispatchQueue.main.async { self.rtActive = normalized > 0.5 }
+                
+                // RT 按下时执行配置的动作
                 if normalized > 0.5 && !wasActive {
-                    print("🔘 RT → 回车")
-                    pressKey(36)
+                    let action = runOnMain { ConfigManager.shared.currentConfig.action(for: .rightTrigger) }
+                    if action.type != .none {
+                        print("🔘 RT → \(action.displayName)")
+                        executeAction(action)
+                    }
                 }
             }
         }
@@ -216,6 +235,16 @@ class HIDControllerManager: ObservableObject {
         guard value != lastDPad else { return }
         lastDPad = value
         
+        // 确定当前按下的 D-Pad 按钮
+        let dpadButton: ControllerButton?
+        switch value {
+        case 1: dpadButton = .dpadUp
+        case 3: dpadButton = .dpadRight
+        case 5: dpadButton = .dpadDown
+        case 7: dpadButton = .dpadLeft
+        default: dpadButton = nil
+        }
+        
         DispatchQueue.main.async {
             self.pressedButtons.remove("DPadUp")
             self.pressedButtons.remove("DPadDown")
@@ -230,12 +259,91 @@ class HIDControllerManager: ObservableObject {
             }
         }
         
+        guard let button = dpadButton else { return }
+        
+        // 检查是否有修饰键被按住，尝试执行组合键
+        if tryExecuteChord(for: button) {
+            return  // 组合键已执行，不再执行普通动作
+        }
+        
+        // 执行普通 D-Pad 动作
         switch value {
         case 1: print("🔘 D-Pad ↑"); pressKey(126)
         case 3: print("🔘 D-Pad →"); pressKey(124)
         case 5: print("🔘 D-Pad ↓"); pressKey(125)
         case 7: print("🔘 D-Pad ←"); pressKey(123)
         default: break
+        }
+    }
+    
+    // MARK: - 组合键处理
+    
+    /// 在主线程同步执行闭包
+    private func runOnMain<T>(_ block: @MainActor () -> T) -> T {
+        if Thread.isMainThread {
+            return MainActor.assumeIsolated { block() }
+        } else {
+            var result: T!
+            DispatchQueue.main.sync {
+                result = MainActor.assumeIsolated { block() }
+            }
+            return result
+        }
+    }
+    
+    /// 获取当前按住的所有修饰键
+    private func getCurrentPressedModifiers() -> Set<ControllerButton> {
+        var pressed: Set<ControllerButton> = []
+        if leftTrigger > 0.5 { pressed.insert(.leftTrigger) }
+        if rightTrigger > 0.5 { pressed.insert(.rightTrigger) }
+        if buttonStates[7] ?? false { pressed.insert(.leftBumper) }
+        if buttonStates[8] ?? false { pressed.insert(.rightBumper) }
+        return pressed
+    }
+    
+    /// 尝试执行组合键，返回是否成功执行
+    private func tryExecuteChord(for button: ControllerButton) -> Bool {
+        let pressedModifiers = getCurrentPressedModifiers()
+        guard !pressedModifiers.isEmpty else { return false }
+        
+        // 获取所有匹配的组合键（修饰键是当前按住修饰键的子集）
+        let matchingChords: [(ButtonChord, Action)] = runOnMain {
+            ConfigManager.shared.currentConfig.chordMappings.compactMap { chord, action in
+                // 检查：组合键的所有修饰键都被按住，且主按钮匹配
+                if chord.modifiers.isSubset(of: pressedModifiers) && chord.button == button {
+                    return (chord, action)
+                }
+                return nil
+            }
+        }
+        
+        // 按修饰键数量从多到少排序（更精确的组合优先）
+        if let (chord, action) = matchingChords.sorted(by: { $0.0.modifiers.count > $1.0.modifiers.count }).first,
+           action.type != .none {
+            print("🔘 组合键: \(chord.displayName) → \(action.displayName)")
+            executeAction(action)
+            return true
+        }
+        
+        return false
+    }
+    
+    /// 执行动作
+    private func executeAction(_ action: Action) {
+        switch action.type {
+        case .shortcut:
+            if let keyCode = action.keyCode {
+                let flags = action.modifiers?.cgEventFlags ?? []
+                pressKey(keyCode, modifiers: flags)
+            }
+        case .mouseClick:
+            if action.mouseButton == .left {
+                click(0)
+            } else if action.mouseButton == .right {
+                click(1)
+            }
+        default:
+            break
         }
     }
     
@@ -309,20 +417,34 @@ class HIDControllerManager: ObservableObject {
     // MARK: - 鼠标/键盘
     
     private func updateMouseLocation() {
-        let loc = NSEvent.mouseLocation
-        if let screen = NSScreen.main {
-            mouseLocation = CGPoint(x: loc.x, y: screen.frame.height - loc.y)
+        // 直接用 CGEvent 获取鼠标位置，已经是 Quartz 坐标系（左上角原点）
+        mouseLocation = CGEvent(source: nil)?.location ?? .zero
+    }
+    
+    private func getTotalDisplayBounds() -> CGRect {
+        // 使用 CGDisplayBounds 获取 Quartz 坐标系下的所有显示器边界
+        var bounds = CGRect.zero
+        let maxDisplays: UInt32 = 16
+        var displays = [CGDirectDisplayID](repeating: 0, count: Int(maxDisplays))
+        var displayCount: UInt32 = 0
+        CGGetActiveDisplayList(maxDisplays, &displays, &displayCount)
+        for i in 0..<Int(displayCount) {
+            let displayBounds = CGDisplayBounds(displays[i])
+            bounds = bounds.union(displayBounds)
         }
+        return bounds
     }
     
     private func moveMouse(dx: CGFloat, dy: CGFloat) {
+        // 每次移动前先同步真实鼠标位置，防止漂移
+        mouseLocation = CGEvent(source: nil)?.location ?? mouseLocation
         mouseLocation.x += dx; mouseLocation.y += dy
-        if let screen = NSScreen.main {
-            mouseLocation.x = max(0, min(mouseLocation.x, screen.frame.width))
-            mouseLocation.y = max(0, min(mouseLocation.y, screen.frame.height))
-        }
+        // 获取所有显示器的总边界（Quartz 坐标系）
+        let totalBounds = getTotalDisplayBounds()
+        mouseLocation.x = max(totalBounds.minX, min(mouseLocation.x, totalBounds.maxX - 1))
+        mouseLocation.y = max(totalBounds.minY, min(mouseLocation.y, totalBounds.maxY - 1))
         CGWarpMouseCursorPosition(mouseLocation)
-        CGAssociateMouseAndMouseCursorPosition(1)  // 重新关联鼠标和光标
+        CGAssociateMouseAndMouseCursorPosition(1)
         if isDragging { postMouse(.leftMouseDragged) }
     }
     

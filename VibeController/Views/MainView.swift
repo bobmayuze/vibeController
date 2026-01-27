@@ -284,6 +284,7 @@ struct MainView: View {
     @StateObject var layout = ButtonLayoutManager.shared
     @StateObject var configManager = ConfigManager.shared
     @State private var editingButton: ControllerButton?
+    @State private var editingChord: ButtonChord?
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -355,9 +356,18 @@ struct MainView: View {
             
             Divider()
             
-            // 手柄可视化
-            ControllerOverlayView(hid: hid, layout: layout, l10n: l10n, configManager: configManager, editingButton: $editingButton)
-                .padding(.vertical, 10)
+            // 主内容区域：左边手柄可视化，右边组合键列表
+            HStack(spacing: 0) {
+                // 手柄可视化
+                ControllerOverlayView(hid: hid, layout: layout, l10n: l10n, configManager: configManager, editingButton: $editingButton)
+                    .padding(.vertical, 10)
+                
+                Divider()
+                
+                // 组合键列表
+                ChordListView(configManager: configManager, l10n: l10n, editingChord: $editingChord)
+                    .frame(width: 200)
+            }
             
             Divider()
             
@@ -401,10 +411,13 @@ struct MainView: View {
             }
             .padding()
         }
-        .frame(minWidth: 680, minHeight: 540)
+        .frame(minWidth: 880, minHeight: 540)
         .onReceive(timer) { _ in accessOK = AXIsProcessTrusted() }
         .sheet(item: $editingButton) { button in
             KeymapEditorView(button: button, configManager: configManager, l10n: l10n)
+        }
+        .sheet(item: $editingChord) { chord in
+            UnifiedChordEditorView(mode: .edit(chord), configManager: configManager, l10n: l10n)
         }
     }
     
@@ -430,6 +443,13 @@ struct MainView: View {
                 encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
                 let data = try encoder.encode(fullConfig)
                 try data.write(to: url)
+                
+                print("✅ 导出成功:")
+                print("   - 按钮映射: \(fullConfig.keyMappings.mappings.count) 个")
+                print("   - 组合键: \(fullConfig.keyMappings.chordMappings.count) 个")
+                for (chord, action) in fullConfig.keyMappings.chordMappings {
+                    print("     \(chord.displayName) → \(action.displayName)")
+                }
                 
                 DispatchQueue.main.async {
                     let alert = NSAlert()
@@ -1508,6 +1528,565 @@ struct KeymapEditorView: View {
                 .japanese: "保存",
                 .simplifiedChinese: "保存",
                 .traditionalChinese: "保存"
+            ]
+        ]
+        return strings[key]?[l10n.currentLanguage] ?? strings[key]?[.english] ?? key
+    }
+}
+
+// MARK: - 组合键列表视图
+
+struct ChordListView: View {
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var l10n: LocalizationManager
+    @Binding var editingChord: ButtonChord?
+    @State private var showingAddSheet = false
+    @State private var duplicatingChord: ButtonChord?
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 标题栏
+            HStack {
+                Text(localizedTitle("chordMappings"))
+                    .font(.headline)
+                Spacer()
+                Button(action: { showingAddSheet = true }) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.title3)
+                }
+                .buttonStyle(.plain)
+                .foregroundColor(.blue)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            
+            Divider()
+            
+            // 组合键列表
+            if configManager.currentConfig.chordMappings.isEmpty {
+                VStack(spacing: 8) {
+                    Spacer()
+                    Image(systemName: "keyboard")
+                        .font(.largeTitle)
+                        .foregroundColor(.secondary)
+                    Text(localizedTitle("noChords"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Spacer()
+                }
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 4) {
+                        ForEach(configManager.allChords, id: \.id) { chord in
+                            ChordRowView(
+                                chord: chord,
+                                action: configManager.action(for: chord),
+                                l10n: l10n,
+                                onTap: { editingChord = chord },
+                                onDelete: { configManager.setAction(.none, for: chord) },
+                                onDuplicate: { duplicateChord(chord) }
+                            )
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                }
+            }
+        }
+        .background(Color(NSColor.controlBackgroundColor))
+        .sheet(isPresented: $showingAddSheet) {
+            UnifiedChordEditorView(mode: .add, configManager: configManager, l10n: l10n)
+        }
+        .sheet(item: $duplicatingChord) { chord in
+            UnifiedChordEditorView(mode: .duplicate(chord), configManager: configManager, l10n: l10n)
+        }
+    }
+    
+    private func duplicateChord(_ chord: ButtonChord) {
+        duplicatingChord = chord
+    }
+    
+    private func localizedTitle(_ key: String) -> String {
+        let strings: [String: [AppLanguage: String]] = [
+            "chordMappings": [
+                .english: "Combo Keys",
+                .japanese: "コンボキー",
+                .simplifiedChinese: "组合键",
+                .traditionalChinese: "組合鍵"
+            ],
+            "noChords": [
+                .english: "No combo keys\nTap + to add",
+                .japanese: "コンボキーなし\n+をタップして追加",
+                .simplifiedChinese: "暂无组合键\n点击 + 添加",
+                .traditionalChinese: "暫無組合鍵\n點擊 + 添加"
+            ]
+        ]
+        return strings[key]?[l10n.currentLanguage] ?? strings[key]?[.english] ?? key
+    }
+}
+
+// MARK: - 组合键行视图
+
+struct ChordRowView: View {
+    let chord: ButtonChord
+    let action: Action
+    var l10n: LocalizationManager = .shared
+    var onTap: () -> Void
+    var onDelete: () -> Void
+    var onDuplicate: () -> Void
+    
+    @State private var isHovering = false
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            // 组合键显示
+            HStack(spacing: 2) {
+                // 显示所有修饰键
+                ForEach(chord.modifiers.sorted { $0.rawValue < $1.rawValue }, id: \.self) { modifier in
+                    if modifier != chord.modifiers.sorted(by: { $0.rawValue < $1.rawValue }).first {
+                        Text("+")
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                    }
+                    Text(modifier.shortName)
+                        .font(.system(size: 10, weight: .semibold))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.2))
+                        .cornerRadius(3)
+                }
+                
+                Text("+")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                
+                Text(chord.button.shortName)
+                    .font(.system(size: 10, weight: .semibold))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
+                    .background(Color.green.opacity(0.2))
+                    .cornerRadius(3)
+            }
+            
+            Spacer()
+            
+            // 动作显示
+            Text(action.displayName)
+                .font(.system(size: 10))
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(isHovering ? Color.blue.opacity(0.1) : Color.clear)
+        .cornerRadius(6)
+        .contentShape(Rectangle())
+        .onTapGesture { onTap() }
+        .onHover { isHovering = $0 }
+        .contextMenu {
+            Button {
+                onDuplicate()
+            } label: {
+                Label(localizedTitle("duplicate"), systemImage: "doc.on.doc")
+            }
+            
+            Divider()
+            
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label(localizedTitle("delete"), systemImage: "trash")
+            }
+        }
+    }
+    
+    private func localizedTitle(_ key: String) -> String {
+        let strings: [String: [AppLanguage: String]] = [
+            "duplicate": [
+                .english: "Duplicate",
+                .japanese: "複製",
+                .simplifiedChinese: "复制",
+                .traditionalChinese: "複製"
+            ],
+            "delete": [
+                .english: "Delete",
+                .japanese: "削除",
+                .simplifiedChinese: "删除",
+                .traditionalChinese: "刪除"
+            ]
+        ]
+        return strings[key]?[l10n.currentLanguage] ?? strings[key]?[.english] ?? key
+    }
+}
+
+// MARK: - 统一组合键编辑器
+
+enum ChordEditorMode {
+    case add
+    case edit(ButtonChord)
+    case duplicate(ButtonChord)
+    
+    var isEditing: Bool {
+        if case .edit = self { return true }
+        return false
+    }
+    
+    var sourceChord: ButtonChord? {
+        switch self {
+        case .add: return nil
+        case .edit(let chord), .duplicate(let chord): return chord
+        }
+    }
+}
+
+struct UnifiedChordEditorView: View {
+    let mode: ChordEditorMode
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var l10n: LocalizationManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var selectedModifiers: Set<ControllerButton>
+    @State private var selectedButton: ControllerButton
+    @State private var macModifiers: ModifierKeys
+    @State private var selectedKey: KeymapEditorView.KeyOption
+    
+    init(mode: ChordEditorMode, configManager: ConfigManager, l10n: LocalizationManager) {
+        self.mode = mode
+        self.configManager = configManager
+        self.l10n = l10n
+        
+        // 根据模式初始化状态
+        switch mode {
+        case .add:
+            _selectedModifiers = State(initialValue: [.leftTrigger])
+            _selectedButton = State(initialValue: .dpadUp)
+            _macModifiers = State(initialValue: [])
+            _selectedKey = State(initialValue: .upArrow)
+            
+        case .edit(let chord), .duplicate(let chord):
+            _selectedModifiers = State(initialValue: chord.modifiers)
+            _selectedButton = State(initialValue: chord.button)
+            
+            let action = configManager.action(for: chord)
+            _macModifiers = State(initialValue: action.modifiers ?? [])
+            
+            if let keyCode = action.keyCode {
+                let found = KeymapEditorView.KeyOption.allCases.first { $0.keyCode == keyCode }
+                _selectedKey = State(initialValue: found ?? .none)
+            } else {
+                _selectedKey = State(initialValue: .none)
+            }
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(titleText)
+                .font(.headline)
+            
+            Divider()
+            
+            // 手柄组合键配置
+            VStack(alignment: .leading, spacing: 4) {
+                Text(localizedTitle("modifier"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text(localizedTitle("modifierHint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.8))
+                
+                HStack(spacing: 8) {
+                    ForEach(ButtonChord.modifierButtons, id: \.self) { button in
+                        Button(action: { toggleModifier(button) }) {
+                            Text(button.shortName)
+                                .font(.system(size: 12, weight: .medium))
+                                .frame(width: 44, height: 32)
+                                .background(selectedModifiers.contains(button) ? Color.blue : Color.gray.opacity(0.2))
+                                .foregroundColor(selectedModifiers.contains(button) ? .white : .primary)
+                                .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            
+            // 主按钮选择
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizedTitle("button"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+                    ForEach(ButtonChord.modifiableButtons, id: \.self) { button in
+                        Button(action: { selectedButton = button }) {
+                            Text(button.shortName)
+                                .font(.system(size: 12, weight: .medium))
+                                .frame(width: 50, height: 32)
+                                .background(selectedButton == button ? Color.blue : Color.gray.opacity(0.2))
+                                .foregroundColor(selectedButton == button ? .white : .primary)
+                                .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            
+            // 手柄组合预览
+            HStack {
+                Text(localizedTitle("preview"))
+                    .foregroundColor(.secondary)
+                Spacer()
+                Text(previewText)
+                    .font(.system(.body, design: .monospaced))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(6)
+            }
+            
+            Divider()
+            
+            // Mac 快捷键配置
+            VStack(alignment: .leading, spacing: 8) {
+                Text(localizedTitle("macAction"))
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
+                    GridRow {
+                        Text(localizedTitle("macModifiers"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        HStack(spacing: 6) {
+                            ModifierToggle(label: "⌘", isOn: Binding(
+                                get: { macModifiers.contains(.command) },
+                                set: { if $0 { macModifiers.insert(.command) } else { macModifiers.remove(.command) } }
+                            ))
+                            ModifierToggle(label: "⌥", isOn: Binding(
+                                get: { macModifiers.contains(.option) },
+                                set: { if $0 { macModifiers.insert(.option) } else { macModifiers.remove(.option) } }
+                            ))
+                            ModifierToggle(label: "⌃", isOn: Binding(
+                                get: { macModifiers.contains(.control) },
+                                set: { if $0 { macModifiers.insert(.control) } else { macModifiers.remove(.control) } }
+                            ))
+                            ModifierToggle(label: "⇧", isOn: Binding(
+                                get: { macModifiers.contains(.shift) },
+                                set: { if $0 { macModifiers.insert(.shift) } else { macModifiers.remove(.shift) } }
+                            ))
+                            Spacer()
+                        }
+                    }
+                    
+                    GridRow {
+                        Text(localizedTitle("macKey"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Picker("", selection: $selectedKey) {
+                            ForEach(KeymapEditorView.KeyOption.allCases, id: \.self) { key in
+                                Text(key.rawValue).tag(key)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    
+                    GridRow {
+                        Text(localizedTitle("output"))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        HStack {
+                            Spacer()
+                            Text(macPreviewText)
+                                .font(.system(.body, design: .monospaced))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.green.opacity(0.1))
+                                .cornerRadius(6)
+                        }
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            Divider()
+            
+            // 按钮
+            HStack {
+                Button(localizedTitle("cancel")) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                
+                Spacer()
+                
+                Button(saveButtonText) {
+                    saveAndDismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .buttonStyle(.borderedProminent)
+                .disabled(isSaveDisabled)
+            }
+        }
+        .padding(20)
+        .frame(width: 380, height: 520)
+    }
+    
+    private var titleText: String {
+        switch mode {
+        case .add: return localizedTitle("addChord")
+        case .edit: return localizedTitle("editChord")
+        case .duplicate: return localizedTitle("duplicateChord")
+        }
+    }
+    
+    private var saveButtonText: String {
+        switch mode {
+        case .add: return localizedTitle("add")
+        case .edit: return localizedTitle("save")
+        case .duplicate: return localizedTitle("duplicate")
+        }
+    }
+    
+    private var isSaveDisabled: Bool {
+        if selectedModifiers.isEmpty || selectedKey == .none { return true }
+        // 检查组合键是否已存在（编辑模式下允许保存自己）
+        let newChord = ButtonChord(modifiers: selectedModifiers, button: selectedButton)
+        if case .edit(let originalChord) = mode, newChord.id == originalChord.id {
+            return false
+        }
+        return configManager.action(for: newChord).type != .none
+    }
+    
+    private func toggleModifier(_ button: ControllerButton) {
+        if selectedModifiers.contains(button) {
+            selectedModifiers.remove(button)
+        } else {
+            selectedModifiers.insert(button)
+        }
+    }
+    
+    private var previewText: String {
+        guard !selectedModifiers.isEmpty else { return selectedButton.shortName }
+        let modifierNames = selectedModifiers.sorted { $0.rawValue < $1.rawValue }.map { $0.shortName }.joined(separator: " + ")
+        return "\(modifierNames) + \(selectedButton.shortName)"
+    }
+    
+    private var macPreviewText: String {
+        let mods = macModifiers.displayString
+        let key = selectedKey == .none ? "" : selectedKey.displayName
+        return mods.isEmpty ? key : "\(mods)\(key)"
+    }
+    
+    private func saveAndDismiss() {
+        let newChord = ButtonChord(modifiers: selectedModifiers, button: selectedButton)
+        
+        // 如果是编辑模式且组合键发生变化，删除旧的
+        if case .edit(let originalChord) = mode, newChord.id != originalChord.id {
+            configManager.setAction(.none, for: originalChord)
+        }
+        
+        let action: Action
+        if selectedKey == .none {
+            action = .none
+        } else {
+            action = Action(type: .shortcut, modifiers: macModifiers, keyCode: selectedKey.keyCode, keyDisplay: selectedKey.displayName)
+        }
+        configManager.setAction(action, for: newChord)
+        dismiss()
+    }
+    
+    private func localizedTitle(_ key: String) -> String {
+        let strings: [String: [AppLanguage: String]] = [
+            "addChord": [
+                .english: "Add Combo Key",
+                .japanese: "コンボキーを追加",
+                .simplifiedChinese: "添加组合键",
+                .traditionalChinese: "添加組合鍵"
+            ],
+            "editChord": [
+                .english: "Edit Combo Key",
+                .japanese: "コンボキーを編集",
+                .simplifiedChinese: "编辑组合键",
+                .traditionalChinese: "編輯組合鍵"
+            ],
+            "duplicateChord": [
+                .english: "Duplicate Combo Key",
+                .japanese: "コンボキーを複製",
+                .simplifiedChinese: "复制组合键",
+                .traditionalChinese: "複製組合鍵"
+            ],
+            "modifier": [
+                .english: "Hold Modifier",
+                .japanese: "修飾キー（押し続ける）",
+                .simplifiedChinese: "修饰键（按住不放）",
+                .traditionalChinese: "修飾鍵（按住不放）"
+            ],
+            "modifierHint": [
+                .english: "Hold this button first, then press the button below",
+                .japanese: "このボタンを押したまま、下のボタンを押してください",
+                .simplifiedChinese: "先按住此键不放，再按下方按钮触发",
+                .traditionalChinese: "先按住此鍵不放，再按下方按鈕觸發"
+            ],
+            "button": [
+                .english: "Then Press",
+                .japanese: "その後押す",
+                .simplifiedChinese: "然后按",
+                .traditionalChinese: "然後按"
+            ],
+            "preview": [
+                .english: "Combo:",
+                .japanese: "コンボ:",
+                .simplifiedChinese: "组合:",
+                .traditionalChinese: "組合:"
+            ],
+            "macAction": [
+                .english: "Mac Action",
+                .japanese: "Macアクション",
+                .simplifiedChinese: "对应 Mac 操作",
+                .traditionalChinese: "對應 Mac 操作"
+            ],
+            "macModifiers": [
+                .english: "Modifiers",
+                .japanese: "修飾キー",
+                .simplifiedChinese: "修饰键",
+                .traditionalChinese: "修飾鍵"
+            ],
+            "macKey": [
+                .english: "Key",
+                .japanese: "キー",
+                .simplifiedChinese: "按键",
+                .traditionalChinese: "按鍵"
+            ],
+            "output": [
+                .english: "Output:",
+                .japanese: "出力:",
+                .simplifiedChinese: "输出:",
+                .traditionalChinese: "輸出:"
+            ],
+            "cancel": [
+                .english: "Cancel",
+                .japanese: "キャンセル",
+                .simplifiedChinese: "取消",
+                .traditionalChinese: "取消"
+            ],
+            "add": [
+                .english: "Add",
+                .japanese: "追加",
+                .simplifiedChinese: "添加",
+                .traditionalChinese: "添加"
+            ],
+            "save": [
+                .english: "Save",
+                .japanese: "保存",
+                .simplifiedChinese: "保存",
+                .traditionalChinese: "保存"
+            ],
+            "duplicate": [
+                .english: "Duplicate",
+                .japanese: "複製",
+                .simplifiedChinese: "复制",
+                .traditionalChinese: "複製"
             ]
         ]
         return strings[key]?[l10n.currentLanguage] ?? strings[key]?[.english] ?? key

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -21,7 +21,7 @@
 /* Begin PBXFileReference section */
 		0239D9BFACB73325C3196468 /* Config.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
 		286DC764528915D433DE65B9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		33F29593C7A310253CFC16B2 /* VibeController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VibeController.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		33F29593C7A310253CFC16B2 /* Vibe Controller.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Vibe Controller.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		35F3C8C2E06D8AF39B0F73F2 /* ControllerInput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControllerInput.swift; sourceTree = "<group>"; };
 		5A06A2C543B65C84B65CF676 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		80F6C0E11C69E3FB9FC142B2 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
@@ -79,7 +79,7 @@
 		6B27FA2226D2691964F2AA5B /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				33F29593C7A310253CFC16B2 /* VibeController.app */,
+				33F29593C7A310253CFC16B2 /* Vibe Controller.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -122,7 +122,7 @@
 			packageProductDependencies = (
 			);
 			productName = VibeController;
-			productReference = 33F29593C7A310253CFC16B2 /* VibeController.app */;
+			productReference = 33F29593C7A310253CFC16B2 /* Vibe Controller.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -135,7 +135,6 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					D36B56C1A41BE753C4237EF4 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -150,7 +149,6 @@
 			);
 			mainGroup = 26B7779A0C3CB76B45A0DB23;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -196,7 +194,7 @@
 				CODE_SIGN_ENTITLEMENTS = VibeController/Resources/VibeController.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 2RS4MN6F35;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = VibeController/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -272,7 +270,7 @@
 				CODE_SIGN_ENTITLEMENTS = VibeController/Resources/VibeController.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 2RS4MN6F35;
 				ENABLE_HARDENED_RUNTIME = NO;
 				INFOPLIST_FILE = VibeController/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

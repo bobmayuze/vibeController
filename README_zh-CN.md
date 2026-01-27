@@ -1,5 +1,7 @@
 # Vibe Controller
 
+![Demo](demo.gif)
+
 用 Xbox 手柄控制 macOS 的系统级工具。
 
 **[English](README.md)** | **[繁體中文](README_zh-TW.md)** | **[日本語](README_ja.md)**
@@ -12,6 +14,18 @@
 - **App Switcher** - 按住 Back 键像 Cmd+Tab 一样切换应用
 - **配置轮盘** - 按下 L3 快速切换配置
 - **自定义映射** - 可配置任意按键到任意动作
+
+## 快速开始
+
+### 方式一：下载发布版
+
+从 [GitHub Releases](https://github.com/bobmayuze/vibeController/releases/tag/alpha) 下载最新版本
+
+### 方式二：Xcode 运行
+
+1. 打开 `VibeController.xcodeproj`
+2. 按 Cmd+R 运行
+3. 首次运行授予辅助功能权限
 
 ## 默认按键映射
 
@@ -46,14 +60,6 @@
 2. **按住 Back + RB** → 下一个应用
 3. **按住 Back + LB** → 上一个应用  
 4. **松开 Back** → 确认选择
-
-## 快速开始
-
-### 方式一：Xcode 运行
-
-1. 打开 `VibeController.xcodeproj`
-2. 按 Cmd+R 运行
-3. 首次运行授予辅助功能权限
 
 ## 权限要求
 

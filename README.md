@@ -1,6 +1,6 @@
 # Vibe Controller
 
-A system-level tool for controlling macOS with an Xbox controller.
+![Demo](demo.gif)
 
 **[简体中文](README_zh-CN.md)** | **[繁體中文](README_zh-TW.md)** | **[日本語](README_ja.md)**
 
@@ -12,6 +12,18 @@ A system-level tool for controlling macOS with an Xbox controller.
 - **App Switcher** - Hold Back button to switch apps like Cmd+Tab
 - **Profile Wheel** - Press L3 to quickly switch between profiles
 - **Customizable Mappings** - Configure any button to any action
+
+## Quick Start
+
+### Option 1: Download Release
+
+Download the latest release from [GitHub Releases](https://github.com/bobmayuze/vibeController/releases/tag/alpha)
+
+### Option 2: Run with Xcode
+
+1. Open `VibeController.xcodeproj`
+2. Press Cmd+R to run
+3. Grant Accessibility permission on first launch
 
 ## Default Button Mappings
 
@@ -46,14 +58,6 @@ A system-level tool for controlling macOS with an Xbox controller.
 2. **Hold Back + RB** → Next app
 3. **Hold Back + LB** → Previous app
 4. **Release Back** → Confirm selection
-
-## Quick Start
-
-### Option 1: Run with Xcode
-
-1. Open `VibeController.xcodeproj`
-2. Press Cmd+R to run
-3. Grant Accessibility permission on first launch
 
 ## Permissions
 

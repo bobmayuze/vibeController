@@ -18,6 +18,10 @@ class HIDControllerManager: ObservableObject {
     @Published var rtActive = false
     @Published var leftStickActive = false
     @Published var rightStickActive = false
+    @Published var leftStickXValue: Float = 0
+    @Published var leftStickYValue: Float = 0
+    @Published var rightStickXValue: Float = 0
+    @Published var rightStickYValue: Float = 0
     
     // 配置
     var cursorSpeed: CGFloat = 15
@@ -268,6 +272,10 @@ class HIDControllerManager: ObservableObject {
         DispatchQueue.main.async {
             self.leftStickActive = leftActive
             self.rightStickActive = rightActive
+            self.leftStickXValue = lx
+            self.leftStickYValue = ly
+            self.rightStickXValue = rx
+            self.rightStickYValue = ry
         }
     }
     

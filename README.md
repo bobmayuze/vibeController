@@ -68,6 +68,12 @@ First launch requires Accessibility permission:
 - **CoreGraphics** - Mouse and keyboard simulation
 - **MenuBarExtra** - Menu bar integration
 
+## Recommended Tools
+
+For voice input while using Vibe Controller, I recommend [Handy](https://github.com/cjpais/Handy) - a free, open source, and privacy-focused speech-to-text application that works completely offline.
+
 ## License
 
-MIT
+MIT License © 2026 [Yuze Ma](mailto:yuze.bob.ma@gmail.com)
+
+See [LICENSE](LICENSE) for details.

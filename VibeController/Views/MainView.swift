@@ -127,20 +127,19 @@ class ButtonLayoutManager: ObservableObject {
     
     // 默认位置 - 每个按钮单独
     static let defaultPositions: [String: CGPoint] = [
-        "LT": CGPoint(x: -135.390625, y: -106.93359375),
-        "LB": CGPoint(x: -174.6328125, y: -57.859375),
-        "RT": CGPoint(x: 129.56640625, y: -106.921875),
-        "RB": CGPoint(x: 161.62890625, y: -58.9921875),
-        "LeftStick": CGPoint(x: -89.37109375, y: -25.89453125),
-        "RightStick": CGPoint(x: 38.53125, y: 24.89453125),
-        "DPad": CGPoint(x: -47.34765625, y: 22.484375),
-        "Back": CGPoint(x: -29.42578125, y: -30.1796875),
-        "Start": CGPoint(x: 18.09375, y: -29.80859375),
-        "Xbox": CGPoint(x: -5.734375, y: -72.01953125),
-        "BtnY": CGPoint(x: 79.4921875, y: -54.38671875),
-        "BtnX": CGPoint(x: 56.48828125, y: -32.109375),
-        "BtnB": CGPoint(x: 104.69921875, y: -31.23828125),
-        "BtnA": CGPoint(x: 79.7421875, y: -9.09375),
+        "LT": CGPoint(x: -124.42344615933746, y: -60.494566028889444),
+        "LB": CGPoint(x: -123.28555096506231, y: -80.53585130351419),
+        "RT": CGPoint(x: 116.35700596004364, y: -59.08930560328747),
+        "RB": CGPoint(x: 127.8842039343237, y: -82.23332507916514),
+        "LeftStick": CGPoint(x: -147.6839345023522, y: 2.08622700200371),
+        "RightStick": CGPoint(x: 148.84410379133055, y: 65.25821152191133),
+        "DPad": CGPoint(x: -150.98512146128945, y: 50.09033122840975),
+        "Back": CGPoint(x: -57.847679133204764, y: -73.79777760984308),
+        "Start": CGPoint(x: 50.37942530330386, y: -73.50660623996629),
+        "BtnY": CGPoint(x: 129.11520807679034, y: 19.26005757433967),
+        "BtnX": CGPoint(x: 128.98023362377108, y: 1.2578441268882443),
+        "BtnB": CGPoint(x: 129.355784077211, y: -16.628769823117736),
+        "BtnA": CGPoint(x: 130.14057436058295, y: -33.98588480623606),
     ]
     
     init() {
@@ -212,95 +211,86 @@ struct ControllerOverlayView: View {
     @ObservedObject var hid: HIDControllerManager
     @ObservedObject var layout: ButtonLayoutManager
     
-    let imgWidth: CGFloat = 420
+    private let baseWidth: CGFloat = 420 // 基准宽度
     
     var body: some View {
-        ZStack {
-            // 控制器背景图
-            Image("ControllerImage")
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: imgWidth)
+        GeometryReader { geo in
+            let targetWidth = min(geo.size.width * 0.95, geo.size.height * 1.9) // SVG 宽高比约 1.9:1
+            let scale = targetWidth / baseWidth
             
-            // LT
-            DraggableButton(key: "LT", layout: layout) {
-                ButtonOverlay(label: "LT", action: "拖拽", isActive: hid.ltActive, editMode: layout.isEditMode)
-            }
-            
-            // LB
-            DraggableButton(key: "LB", layout: layout) {
-                ButtonOverlay(label: "LB", action: "撤销", isActive: hid.pressedButtons.contains("LB"), editMode: layout.isEditMode)
-            }
-            
-            // RT
-            DraggableButton(key: "RT", layout: layout) {
-                ButtonOverlay(label: "RT", action: "回车", isActive: hid.rtActive, editMode: layout.isEditMode)
-            }
-            
-            // RB
-            DraggableButton(key: "RB", layout: layout) {
-                ButtonOverlay(label: "RB", action: "Opt+空格", isActive: hid.pressedButtons.contains("RB"), editMode: layout.isEditMode)
-            }
-            
-            // 左摇杆
-            DraggableButton(key: "LeftStick", layout: layout) {
-                StickOverlay(label: "左摇杆", action: "鼠标", isActive: hid.leftStickActive, l3Label: "L3:回车", l3Active: hid.pressedButtons.contains("L3"), editMode: layout.isEditMode, stickX: hid.leftStickXValue, stickY: hid.leftStickYValue)
-            }
-            
-            // 右摇杆
-            DraggableButton(key: "RightStick", layout: layout) {
-                StickOverlay(label: "右摇杆", action: "滚动", isActive: hid.rightStickActive, l3Label: "R3:Esc", l3Active: hid.pressedButtons.contains("R3"), editMode: layout.isEditMode, stickX: hid.rightStickXValue, stickY: hid.rightStickYValue)
-            }
-            
-            // D-Pad
-            DraggableButton(key: "DPad", layout: layout) {
-                DPadOverlay(isActive: hid.pressedButtons.contains("DPad"), editMode: layout.isEditMode)
-            }
-            
-            // Xbox 按钮
-            DraggableButton(key: "Xbox", layout: layout) {
-                Image("XboxLogo")
+            ZStack {
+                // 控制器背景图
+                Image("ControllerImage")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 32, height: 32)
-                    .if(layout.isEditMode) { $0.colorInvert() }
+                    .frame(width: targetWidth)
+            
+            // LT - 左侧，文字在左
+            DraggableButton(key: "LT", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "LT", action: "拖拽", isActive: hid.ltActive, editMode: layout.isEditMode, size: 27 * scale, textAlign: .left, scale: scale)
             }
             
-            // Back 按钮
-            DraggableButton(key: "Back", layout: layout) {
-                VStack(spacing: 2) {
-                    SmallButtonOverlay(isActive: hid.isAppSwitcherActive, editMode: layout.isEditMode)
-                    Text("App切换").font(.system(size: 6)).foregroundColor(hid.isAppSwitcherActive ? .primary : .secondary)
-                }
+            // LB - 左侧，文字在左
+            DraggableButton(key: "LB", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "LB", action: "撤销", isActive: hid.pressedButtons.contains("LB"), editMode: layout.isEditMode, size: 27 * scale, textAlign: .left, scale: scale)
             }
             
-            // Start 按钮
-            DraggableButton(key: "Start", layout: layout) {
-                VStack(spacing: 2) {
-                    SmallButtonOverlay(isActive: hid.pressedButtons.contains("Start"), editMode: layout.isEditMode)
-                    Text("命令面板").font(.system(size: 6)).foregroundColor(hid.pressedButtons.contains("Start") ? .primary : .secondary)
-                }
+            // RT - 右侧，文字在右
+            DraggableButton(key: "RT", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "RT", action: "回车", isActive: hid.rtActive, editMode: layout.isEditMode, size: 27 * scale, textAlign: .right, scale: scale)
             }
             
-            // Y 按钮
-            DraggableButton(key: "BtnY", layout: layout) {
-                FaceBtnOverlay(letter: "Y", color: .yellow, action: "粘贴", isActive: hid.pressedButtons.contains("Y"), editMode: layout.isEditMode)
+            // RB - 右侧，文字在右
+            DraggableButton(key: "RB", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "RB", action: "Opt+空格", isActive: hid.pressedButtons.contains("RB"), editMode: layout.isEditMode, size: 27 * scale, textAlign: .right, scale: scale)
             }
             
-            // X 按钮
-            DraggableButton(key: "BtnX", layout: layout) {
-                FaceBtnOverlay(letter: "X", color: .blue, action: "复制", isActive: hid.pressedButtons.contains("X"), editMode: layout.isEditMode)
+            // 左摇杆 - 左侧，文字在左
+            DraggableButton(key: "LeftStick", layout: layout, scale: scale) {
+                SVGStickOverlay(imageName: "LeftStick", action: "移动：鼠标", isActive: hid.leftStickActive, l3Label: "按下：回车", l3Active: hid.pressedButtons.contains("L3"), editMode: layout.isEditMode, stickX: hid.leftStickXValue, stickY: hid.leftStickYValue, size: 36 * scale, textAlign: .left, scale: scale)
             }
             
-            // B 按钮
-            DraggableButton(key: "BtnB", layout: layout) {
-                FaceBtnOverlay(letter: "B", color: .red, action: "右键", isActive: hid.pressedButtons.contains("B"), editMode: layout.isEditMode)
+            // 右摇杆 - 右侧，文字在右
+            DraggableButton(key: "RightStick", layout: layout, scale: scale) {
+                SVGStickOverlay(imageName: "RightStick", action: "移动：滚动", isActive: hid.rightStickActive, l3Label: "按下：Esc", l3Active: hid.pressedButtons.contains("R3"), editMode: layout.isEditMode, stickX: hid.rightStickXValue, stickY: hid.rightStickYValue, size: 36 * scale, textAlign: .right, scale: scale)
             }
             
-            // A 按钮
-            DraggableButton(key: "BtnA", layout: layout) {
-                FaceBtnOverlay(letter: "A", color: .green, action: "左键", isActive: hid.pressedButtons.contains("A"), editMode: layout.isEditMode)
+            // D-Pad - 左侧，文字在左
+            DraggableButton(key: "DPad", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "DPad", action: "方向键", isActive: hid.pressedButtons.contains("DPad"), editMode: layout.isEditMode, size: 35 * scale, textAlign: .left, scale: scale)
             }
+            
+            // Back 按钮 (View) - 左侧，文字在左
+            DraggableButton(key: "Back", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "ViewBtn", action: "App切换", isActive: hid.isAppSwitcherActive, editMode: layout.isEditMode, size: 20 * scale, textAlign: .left, scale: scale)
+            }
+            
+            // Start 按钮 (Menu) - 右侧，文字在右
+            DraggableButton(key: "Start", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "MenuBtn", action: "命令面板", isActive: hid.pressedButtons.contains("Start"), editMode: layout.isEditMode, size: 20 * scale, textAlign: .right, scale: scale)
+            }
+            
+            // Y 按钮 - 橙色，右侧，文字在右
+            DraggableButton(key: "BtnY", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "BtnY", action: "粘贴", isActive: hid.pressedButtons.contains("Y"), editMode: layout.isEditMode, size: 16 * scale, activeColor: .orange, textAlign: .right, scale: scale)
+            }
+            
+            // X 按钮 - 蓝色，右侧，文字在右
+            DraggableButton(key: "BtnX", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "BtnX", action: "复制", isActive: hid.pressedButtons.contains("X"), editMode: layout.isEditMode, size: 16 * scale, activeColor: .blue, textAlign: .right, scale: scale)
+            }
+            
+            // B 按钮 - 红色，右侧，文字在右
+            DraggableButton(key: "BtnB", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "BtnB", action: "右键", isActive: hid.pressedButtons.contains("B"), editMode: layout.isEditMode, size: 16 * scale, activeColor: .red, textAlign: .right, scale: scale)
+            }
+            
+            // A 按钮 - 绿色，右侧，文字在右
+            DraggableButton(key: "BtnA", layout: layout, scale: scale) {
+                SVGButtonOverlay(imageName: "BtnA", action: "左键", isActive: hid.pressedButtons.contains("A"), editMode: layout.isEditMode, size: 16 * scale, activeColor: .green, textAlign: .right, scale: scale)
+            }
+        }
+        .frame(width: geo.size.width, height: geo.size.height)
         }
     }
 }
@@ -310,22 +300,23 @@ struct ControllerOverlayView: View {
 struct DraggableButton<Content: View>: View {
     let key: String
     @ObservedObject var layout: ButtonLayoutManager
+    var scale: CGFloat = 1.0
     let content: () -> Content
     
     @State private var dragOffset: CGSize = .zero
     
     var body: some View {
         content()
-            .offset(x: layout.position(for: key).x + dragOffset.width,
-                    y: layout.position(for: key).y + dragOffset.height)
+            .offset(x: (layout.position(for: key).x + dragOffset.width) * scale,
+                    y: (layout.position(for: key).y + dragOffset.height) * scale)
             .gesture(
                 layout.isEditMode ?
                 DragGesture()
                     .onChanged { value in
-                        dragOffset = value.translation
+                        dragOffset = CGSize(width: value.translation.width / scale, height: value.translation.height / scale)
                     }
                     .onEnded { value in
-                        layout.updatePosition(for: key, offset: value.translation)
+                        layout.updatePosition(for: key, offset: CGSize(width: value.translation.width / scale, height: value.translation.height / scale))
                         dragOffset = .zero
                     }
                 : nil
@@ -526,5 +517,134 @@ struct SmallButtonOverlay: View {
                 .frame(width: 16, height: 16)
         }
         .animation(.easeInOut(duration: 0.1), value: isActive)
+    }
+}
+
+// MARK: - 文字对齐方向
+enum TextAlign {
+    case left, right, bottom
+}
+
+// MARK: - SVG 按钮叠加层
+
+struct SVGButtonOverlay: View {
+    let imageName: String
+    let action: String
+    let isActive: Bool
+    var editMode: Bool = false
+    var size: CGFloat = 32
+    var activeColor: Color = .blue
+    var textAlign: TextAlign = .bottom
+    var scale: CGFloat = 1.0
+    
+    private var fontSize: CGFloat { 9 * scale }
+    
+    var body: some View {
+        Group {
+            switch textAlign {
+            case .left:
+                HStack(spacing: 3 * scale) {
+                    actionText
+                    buttonImage
+                }
+            case .right:
+                HStack(spacing: 3 * scale) {
+                    buttonImage
+                    actionText
+                }
+            case .bottom:
+                VStack(spacing: 2 * scale) {
+                    buttonImage
+                    actionText
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.1), value: isActive)
+    }
+    
+    private var buttonImage: some View {
+        Image(imageName)
+            .renderingMode(.template)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: size, height: size)
+            .foregroundColor((editMode || isActive) ? activeColor : .primary.opacity(0.6))
+            .shadow(color: (editMode || isActive) ? activeColor.opacity(0.8) : .clear, radius: isActive ? 6 * scale : 0)
+            .scaleEffect(isActive ? 1.15 : 1.0)
+    }
+    
+    @ViewBuilder
+    private var actionText: some View {
+        if !action.isEmpty {
+            Text(action)
+                .font(.system(size: fontSize))
+                .foregroundColor(isActive ? .primary : .secondary)
+        }
+    }
+}
+
+// MARK: - SVG 摇杆叠加层
+
+struct SVGStickOverlay: View {
+    let imageName: String
+    let action: String
+    let isActive: Bool
+    let l3Label: String
+    let l3Active: Bool
+    var editMode: Bool = false
+    var stickX: Float = 0
+    var stickY: Float = 0
+    var size: CGFloat = 52
+    var textAlign: TextAlign = .bottom
+    var scale: CGFloat = 1.0
+    
+    private var maxOffset: CGFloat { 6 * scale }
+    private var fontSize: CGFloat { 9 * scale }
+    
+    var body: some View {
+        Group {
+            switch textAlign {
+            case .left:
+                HStack(spacing: 3 * scale) {
+                    labelsView
+                    stickImage
+                }
+            case .right:
+                HStack(spacing: 3 * scale) {
+                    stickImage
+                    labelsView
+                }
+            case .bottom:
+                VStack(spacing: 2 * scale) {
+                    stickImage
+                    labelsView
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.05), value: stickX)
+        .animation(.easeInOut(duration: 0.05), value: stickY)
+    }
+    
+    private var stickImage: some View {
+        Image(imageName)
+            .renderingMode(.template)
+            .resizable()
+            .aspectRatio(contentMode: .fit)
+            .frame(width: size, height: size)
+            .foregroundColor((editMode || isActive) ? .blue : .primary.opacity(0.6))
+            .shadow(color: (editMode || isActive) ? .blue.opacity(0.8) : .clear, radius: isActive ? 6 * scale : 0)
+            .offset(x: CGFloat(stickX) * maxOffset, y: CGFloat(stickY) * maxOffset)
+    }
+    
+    private var labelsView: some View {
+        VStack(alignment: textAlign == .left ? .trailing : .leading, spacing: 1 * scale) {
+            Text(action)
+                .font(.system(size: fontSize))
+                .foregroundColor(isActive ? .primary : .secondary)
+            
+            Text(l3Label)
+                .font(.system(size: fontSize))
+                .foregroundColor(l3Active ? .primary : .secondary.opacity(0.6))
+        }
     }
 }

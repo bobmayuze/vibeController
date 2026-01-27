@@ -46,6 +46,11 @@ class HIDControllerManager: ObservableObject {
     private var mouseLocation: CGPoint = .zero
     private var isDragging = false
     
+    // 连击追踪 (用于支持双击/三击)
+    private var lastClickTime: [Int: Date] = [:]  // button -> 上次点击时间
+    private var clickCount: [Int: Int64] = [:]     // button -> 当前连击次数
+    private let doubleClickInterval: TimeInterval = 0.5  // 双击判定间隔（秒）
+    
     private init() {}
     
     // MARK: - 启动/停止
@@ -207,28 +212,42 @@ class HIDControllerManager: ObservableObject {
     }
     
     private func handleButtonPress(_ button: UInt32) {
+        // 将 HID button 编号映射到 ControllerButton
+        let controllerButton: ControllerButton?
         switch button {
-        case 1: print("🔘 A → 左键"); click(0)
-        case 2: print("🔘 B → 右键"); click(1)
-        case 4: print("🔘 X → 复制"); pressKey(8, modifiers: .maskCommand)
-        case 5: print("🔘 Y → 粘贴"); pressKey(9, modifiers: .maskCommand)
-        case 7:
-            if isAppSwitcherActive {
-                print("🔘 LB → 上一个App"); pressKey(48, modifiers: [.maskCommand, .maskShift])
-            } else {
-                print("🔘 LB → 撤销"); pressKey(6, modifiers: .maskCommand)
-            }
-        case 8:
-            if isAppSwitcherActive {
-                print("🔘 RB → 下一个App"); pressKey(48, modifiers: .maskCommand)
-            } else {
-                print("🔘 RB → Option+Space"); pressKey(49, modifiers: .maskAlternate)
-            }
-        case 12: print("🔘 Start → 命令面板"); pressKey(35, modifiers: [.maskCommand, .maskShift])
-        case 14: print("🔘 L3 → 回车"); pressKey(36)
-        case 15: print("🔘 R3 → Esc"); pressKey(53)
-        default: break
+        case 1: controllerButton = .buttonA
+        case 2: controllerButton = .buttonB
+        case 4: controllerButton = .buttonX
+        case 5: controllerButton = .buttonY
+        case 7: controllerButton = .leftBumper
+        case 8: controllerButton = .rightBumper
+        case 12: controllerButton = .startButton
+        case 14: controllerButton = .leftStickButton
+        case 15: controllerButton = .rightStickButton
+        default: controllerButton = nil
         }
+        
+        guard let btn = controllerButton else { return }
+        
+        // App Switcher 模式下，LB/RB 有特殊行为
+        if isAppSwitcherActive {
+            if btn == .leftBumper {
+                print("🔘 LB → 上一个App")
+                pressKey(48, modifiers: [.maskCommand, .maskShift])
+                return
+            } else if btn == .rightBumper {
+                print("🔘 RB → 下一个App")
+                pressKey(48, modifiers: .maskCommand)
+                return
+            }
+        }
+        
+        // 从配置读取动作
+        let action = runOnMain { ConfigManager.shared.currentConfig.action(for: btn) }
+        guard action.type != .none else { return }
+        
+        print("🔘 \(btn.displayName) → \(action.displayName)")
+        executeAction(action)
     }
     
     private func handleDPad(_ value: Int) {
@@ -266,14 +285,12 @@ class HIDControllerManager: ObservableObject {
             return  // 组合键已执行，不再执行普通动作
         }
         
-        // 执行普通 D-Pad 动作
-        switch value {
-        case 1: print("🔘 D-Pad ↑"); pressKey(126)
-        case 3: print("🔘 D-Pad →"); pressKey(124)
-        case 5: print("🔘 D-Pad ↓"); pressKey(125)
-        case 7: print("🔘 D-Pad ←"); pressKey(123)
-        default: break
-        }
+        // 从配置读取 D-Pad 动作
+        let action = runOnMain { ConfigManager.shared.currentConfig.action(for: button) }
+        guard action.type != .none else { return }
+        
+        print("🔘 \(button.displayName) → \(action.displayName)")
+        executeAction(action)
     }
     
     // MARK: - 组合键处理
@@ -337,13 +354,43 @@ class HIDControllerManager: ObservableObject {
                 pressKey(keyCode, modifiers: flags)
             }
         case .mouseClick:
-            if action.mouseButton == .left {
-                click(0)
-            } else if action.mouseButton == .right {
-                click(1)
+            switch action.mouseButton {
+            case .left: click(0)
+            case .right: click(1)
+            case .middle: clickMiddle()
+            case .none: break
             }
         default:
             break
+        }
+    }
+    
+    private func clickMiddle() {
+        updateMouseLocation()
+        
+        // 计算连击次数 (用 button = 2 表示中键)
+        let button = 2
+        let now = Date()
+        if let lastTime = lastClickTime[button], now.timeIntervalSince(lastTime) < doubleClickInterval {
+            clickCount[button] = (clickCount[button] ?? 0) + 1
+        } else {
+            clickCount[button] = 1
+        }
+        lastClickTime[button] = now
+        let count = clickCount[button] ?? 1
+        
+        let clickName = count == 1 ? "单击" : count == 2 ? "双击" : "\(count)连击"
+        print("   中键点击位置: \(mouseLocation) (\(clickName))")
+        
+        if let down = CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown, mouseCursorPosition: mouseLocation, mouseButton: .center),
+           let up = CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp, mouseCursorPosition: mouseLocation, mouseButton: .center) {
+            down.setIntegerValueField(.mouseEventButtonNumber, value: 2)
+            down.setIntegerValueField(.mouseEventClickState, value: count)
+            up.setIntegerValueField(.mouseEventButtonNumber, value: 2)
+            up.setIntegerValueField(.mouseEventClickState, value: count)
+            down.post(tap: .cghidEventTap)
+            up.post(tap: .cghidEventTap)
+            print("   中键\(clickName)成功")
         }
     }
     
@@ -454,16 +501,29 @@ class HIDControllerManager: ObservableObject {
     
     private func click(_ button: Int) {
         updateMouseLocation()
-        print("   点击位置: \(mouseLocation)")
+        
+        // 计算连击次数
+        let now = Date()
+        if let lastTime = lastClickTime[button], now.timeIntervalSince(lastTime) < doubleClickInterval {
+            clickCount[button] = (clickCount[button] ?? 0) + 1
+        } else {
+            clickCount[button] = 1
+        }
+        lastClickTime[button] = now
+        let count = clickCount[button] ?? 1
+        
+        let clickName = count == 1 ? "单击" : count == 2 ? "双击" : "\(count)连击"
+        print("   点击位置: \(mouseLocation) (\(clickName))")
+        
         if button == 0 {
-            if postMouse(.leftMouseDown) && postMouse(.leftMouseUp) {
-                print("   左键点击成功")
+            if postMouse(.leftMouseDown, clickCount: count) && postMouse(.leftMouseUp, clickCount: count) {
+                print("   左键\(clickName)成功")
             } else {
                 print("   ❌ 左键点击失败")
             }
         } else {
-            if postMouse(.rightMouseDown, button: .right) && postMouse(.rightMouseUp, button: .right) {
-                print("   右键点击成功")
+            if postMouse(.rightMouseDown, button: .right, clickCount: count) && postMouse(.rightMouseUp, button: .right, clickCount: count) {
+                print("   右键\(clickName)成功")
             } else {
                 print("   ❌ 右键点击失败")
             }
@@ -483,12 +543,13 @@ class HIDControllerManager: ObservableObject {
     }
     
     @discardableResult
-    private func postMouse(_ type: CGEventType, button: CGMouseButton = .left) -> Bool {
+    private func postMouse(_ type: CGEventType, button: CGMouseButton = .left, clickCount: Int64 = 1) -> Bool {
         guard let event = CGEvent(mouseEventSource: nil, mouseType: type, mouseCursorPosition: mouseLocation, mouseButton: button) else {
             print("   ❌ CGEvent 创建失败")
             return false
         }
-        event.post(tap: .cghidEventTap)  // 使用 cghidEventTap 而不是 cgSessionEventTap
+        event.setIntegerValueField(.mouseEventClickState, value: clickCount)
+        event.post(tap: .cghidEventTap)
         return true
     }
     

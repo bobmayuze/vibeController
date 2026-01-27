@@ -16,6 +16,7 @@
 		D6DCD2D5247BC5384DFD264C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 286DC764528915D433DE65B9 /* AppDelegate.swift */; };
 		E046730676459EF242C6C2CA /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80F6C0E11C69E3FB9FC142B2 /* MainView.swift */; };
 		E0EF75E23D597CFC65A0951C /* ConfigManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 928882D5595A6565FD2DBA7F /* ConfigManager.swift */; };
+		F1A2B3C4D5E6F7890A1B2C3D /* default_config.json in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6A7B8C9D0E1F2 /* default_config.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		80F6C0E11C69E3FB9FC142B2 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		86DC98C540FC6D719CEFDB3C /* HIDControllerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HIDControllerManager.swift; sourceTree = "<group>"; };
 		928882D5595A6565FD2DBA7F /* ConfigManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6A7B8C9D0E1F2 /* default_config.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = default_config.json; sourceTree = "<group>"; };
 		C6FA7C7E209FB2D639AC61CF /* VibeControllerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibeControllerApp.swift; sourceTree = "<group>"; };
 		D5A5D036935A1E41381B6180 /* Action.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Action.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -54,6 +56,7 @@
 			isa = PBXGroup;
 			children = (
 				5A06A2C543B65C84B65CF676 /* Assets.xcassets */,
+				A1B2C3D4E5F6A7B8C9D0E1F2 /* default_config.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -163,6 +166,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				322B1A7BD8DB9AA79D9C81C3 /* Assets.xcassets in Resources */,
+				F1A2B3C4D5E6F7890A1B2C3D /* default_config.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

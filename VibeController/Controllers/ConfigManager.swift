@@ -1,6 +1,18 @@
 import Foundation
 import Combine
 
+// MARK: - Bundle 配置文件结构
+
+struct BundleConfigFile: Codable {
+    var buttonPositions: [String: CGPointCodable]?
+    var profiles: [ControllerConfig]
+    
+    struct CGPointCodable: Codable {
+        var x: CGFloat
+        var y: CGFloat
+    }
+}
+
 // MARK: - 配置管理器
 
 @MainActor
@@ -9,9 +21,11 @@ class ConfigManager: ObservableObject {
     
     @Published var configs: [ControllerConfig] = []
     @Published var currentConfig: ControllerConfig
+    @Published var buttonPositions: [String: CGPoint] = [:]
     
     private let configsKey = "SavedConfigs"
     private let currentConfigIdKey = "CurrentConfigId"
+    private let buttonPositionsKey = "ButtonPositions"
     
     private init() {
         // 先创建一个临时默认配置，loadConfigs 会覆盖它
@@ -88,19 +102,30 @@ class ConfigManager: ObservableObject {
     // MARK: - 持久化
     
     private func loadConfigs() {
+        // 先尝试从 UserDefaults 加载
         if let data = UserDefaults.standard.data(forKey: configsKey),
            let decoded = try? JSONDecoder().decode([ControllerConfig].self, from: data) {
             configs = decoded
-            print("✅ 已加载 \(decoded.count) 个配置")
+            print("✅ 已从 UserDefaults 加载 \(decoded.count) 个配置")
             for config in decoded {
                 print("   - \(config.name): \(config.chordMappings.count) 个组合键")
             }
         }
         
+        // 加载按钮位置
+        loadButtonPositions()
+        
+        // 如果没有配置，尝试从 bundle 加载默认配置
         if configs.isEmpty {
-            let defaultConfig = ControllerConfig.default
-            configs = [defaultConfig]
-            print("✅ 创建默认配置，包含 \(defaultConfig.chordMappings.count) 个组合键")
+            if let bundleConfigs = loadFromBundle() {
+                configs = bundleConfigs
+                print("✅ 从 Bundle 加载了 \(bundleConfigs.count) 个默认配置")
+                saveConfigs()  // 保存到 UserDefaults
+            } else {
+                let defaultConfig = ControllerConfig.default
+                configs = [defaultConfig]
+                print("✅ 创建默认配置，包含 \(defaultConfig.chordMappings.count) 个组合键")
+            }
         }
         
         // 加载当前选中的配置
@@ -113,6 +138,57 @@ class ConfigManager: ObservableObject {
         }
         
         print("✅ 当前配置: \(currentConfig.name), 组合键数量: \(currentConfig.chordMappings.count)")
+    }
+    
+    /// 从 Bundle 加载默认配置
+    private func loadFromBundle() -> [ControllerConfig]? {
+        guard let url = Bundle.main.url(forResource: "default_config", withExtension: "json") else {
+            print("⚠️ Bundle 中未找到 default_config.json")
+            return nil
+        }
+        
+        do {
+            let data = try Data(contentsOf: url)
+            let bundleConfig = try JSONDecoder().decode(BundleConfigFile.self, from: data)
+            
+            // 加载按钮位置
+            if let positions = bundleConfig.buttonPositions {
+                for (key, point) in positions {
+                    buttonPositions[key] = CGPoint(x: point.x, y: point.y)
+                }
+                saveButtonPositions()
+                print("✅ 从 Bundle 加载了 \(positions.count) 个按钮位置")
+            }
+            
+            return bundleConfig.profiles
+        } catch {
+            print("❌ 加载 Bundle 配置失败: \(error)")
+            return nil
+        }
+    }
+    
+    private func loadButtonPositions() {
+        if let data = UserDefaults.standard.data(forKey: buttonPositionsKey),
+           let decoded = try? JSONDecoder().decode([String: BundleConfigFile.CGPointCodable].self, from: data) {
+            for (key, point) in decoded {
+                buttonPositions[key] = CGPoint(x: point.x, y: point.y)
+            }
+        }
+    }
+    
+    private func saveButtonPositions() {
+        var codable: [String: BundleConfigFile.CGPointCodable] = [:]
+        for (key, point) in buttonPositions {
+            codable[key] = BundleConfigFile.CGPointCodable(x: point.x, y: point.y)
+        }
+        if let encoded = try? JSONEncoder().encode(codable) {
+            UserDefaults.standard.set(encoded, forKey: buttonPositionsKey)
+        }
+    }
+    
+    func updateButtonPosition(_ button: String, position: CGPoint) {
+        buttonPositions[button] = position
+        saveButtonPositions()
     }
     
     private func saveConfigs() {
@@ -153,6 +229,6 @@ class ConfigManager: ObservableObject {
     }
     
     func duplicateConfig(_ config: ControllerConfig) -> ControllerConfig {
-        return createNewConfig(name: "\(config.name) 副本", basedOn: config)
+        return createNewConfig(name: "\(config.name) Copy", basedOn: config)
     }
 }

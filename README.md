@@ -10,6 +10,7 @@ A system-level tool for controlling macOS with an Xbox controller.
 - **Visual Button Map** - Intuitive display of current button mappings
 - **Background Operation** - IOKit HID based, works even when window loses focus
 - **App Switcher** - Hold Back button to switch apps like Cmd+Tab
+- **Profile Wheel** - Press L3 to quickly switch between profiles
 - **Customizable Mappings** - Configure any button to any action
 
 ## Default Button Mappings
@@ -25,19 +26,19 @@ A system-level tool for controlling macOS with an Xbox controller.
 | **LB** | Undo (⌘Z) / Previous app in App Switcher |
 | **RB** | Option+Space / Next app in App Switcher |
 | **LT** | Drag mode (hold to drag files/text) |
-| **RT** | None |
-| **L3** | Enter |
+| **RT** | Enter |
+| **L3** | Profile Wheel |
 | **R3** | Esc |
 | **Start** | Command Palette (⌘⇧P) |
 | **Back** | App Switcher (⌘Tab) |
-| **D-Pad** | Arrow keys |
+| **D-Pad Up/Down** | Arrow keys |
+| **D-Pad Left/Right** | Option + Arrow keys (word navigation) |
 
 ### Chord Mappings (Combos)
 
 | Combo | Function |
 |-------|----------|
 | **LT + D-Pad** | Shift + Arrow keys (text selection) |
-| **LT + RT + D-Pad** | Shift + Option + Arrow keys (word selection) |
 
 ## App Switcher Usage
 
@@ -53,16 +54,6 @@ A system-level tool for controlling macOS with an Xbox controller.
 1. Open `VibeController.xcodeproj`
 2. Press Cmd+R to run
 3. Grant Accessibility permission on first launch
-
-### Option 2: Command Line Service
-
-```bash
-cd VibeControllerService
-swiftc -O -o VibeControllerService main.swift \
-  -framework Foundation -framework IOKit \
-  -framework CoreGraphics -framework AppKit
-./VibeControllerService
-```
 
 ## Permissions
 

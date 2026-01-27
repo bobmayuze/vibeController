@@ -1454,7 +1454,10 @@ struct SVGButtonOverlay: View {
     var textAlign: TextAlign = .bottom
     var scale: CGFloat = 1.0
     
+    @State private var isHovering = false
+    
     private var fontSize: CGFloat { 9 * scale }
+    private var isHighlighted: Bool { editMode || isActive || isHovering }
     
     var body: some View {
         Group {
@@ -1477,6 +1480,8 @@ struct SVGButtonOverlay: View {
             }
         }
         .animation(.easeInOut(duration: 0.1), value: isActive)
+        .animation(.easeInOut(duration: 0.1), value: isHovering)
+        .onHover { isHovering = $0 }
     }
     
     private var buttonImage: some View {
@@ -1485,9 +1490,9 @@ struct SVGButtonOverlay: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .foregroundColor((editMode || isActive) ? activeColor : .primary.opacity(0.6))
-            .shadow(color: (editMode || isActive) ? activeColor.opacity(0.8) : .clear, radius: isActive ? 6 * scale : 0)
-            .scaleEffect(isActive ? 1.15 : 1.0)
+            .foregroundColor(isHighlighted ? activeColor : .primary.opacity(0.6))
+            .shadow(color: isHighlighted ? activeColor.opacity(0.8) : .clear, radius: (isActive || isHovering) ? 6 * scale : 0)
+            .scaleEffect(isActive ? 1.15 : (isHovering ? 1.08 : 1.0))
     }
     
     @ViewBuilder
@@ -1495,7 +1500,7 @@ struct SVGButtonOverlay: View {
         if !action.isEmpty {
             Text(action)
                 .font(.system(size: fontSize))
-                .foregroundColor(isActive ? .primary : .secondary)
+                .foregroundColor((isActive || isHovering) ? .primary : .secondary)
         }
     }
 }
@@ -1515,8 +1520,11 @@ struct SVGStickOverlay: View {
     var textAlign: TextAlign = .bottom
     var scale: CGFloat = 1.0
     
+    @State private var isHovering = false
+    
     private var maxOffset: CGFloat { 6 * scale }
     private var fontSize: CGFloat { 9 * scale }
+    private var isHighlighted: Bool { editMode || isActive || isHovering }
     
     var body: some View {
         Group {
@@ -1540,6 +1548,8 @@ struct SVGStickOverlay: View {
         }
         .animation(.easeInOut(duration: 0.05), value: stickX)
         .animation(.easeInOut(duration: 0.05), value: stickY)
+        .animation(.easeInOut(duration: 0.1), value: isHovering)
+        .onHover { isHovering = $0 }
     }
     
     private var stickImage: some View {
@@ -1548,8 +1558,9 @@ struct SVGStickOverlay: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: size, height: size)
-            .foregroundColor((editMode || isActive) ? .blue : .primary.opacity(0.6))
-            .shadow(color: (editMode || isActive) ? .blue.opacity(0.8) : .clear, radius: isActive ? 6 * scale : 0)
+            .foregroundColor(isHighlighted ? .blue : .primary.opacity(0.6))
+            .shadow(color: isHighlighted ? .blue.opacity(0.8) : .clear, radius: (isActive || isHovering) ? 6 * scale : 0)
+            .scaleEffect(isHovering && !isActive ? 1.08 : 1.0)
             .offset(x: CGFloat(stickX) * maxOffset, y: CGFloat(stickY) * maxOffset)
     }
     
@@ -1557,11 +1568,11 @@ struct SVGStickOverlay: View {
         VStack(alignment: .leading, spacing: 1 * scale) {
             Text(action)
                 .font(.system(size: fontSize))
-                .foregroundColor(isActive ? .primary : .secondary)
+                .foregroundColor((isActive || isHovering) ? .primary : .secondary)
             
             Text(l3Label)
                 .font(.system(size: fontSize))
-                .foregroundColor(l3Active ? .primary : .secondary.opacity(0.6))
+                .foregroundColor((l3Active || isHovering) ? .primary : .secondary.opacity(0.6))
         }
     }
 }

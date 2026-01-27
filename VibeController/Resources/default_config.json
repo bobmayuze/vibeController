@@ -1,0 +1,505 @@
+{
+  "buttonPositions" : {
+    "Back" : {
+      "x" : -57.847679133204764,
+      "y" : -73.79777760984308
+    },
+    "BtnA" : {
+      "x" : 130.14057436058295,
+      "y" : -33.98588480623606
+    },
+    "BtnB" : {
+      "x" : 132.655625976465,
+      "y" : -17.958621195971883
+    },
+    "BtnX" : {
+      "x" : 130.66571785970615,
+      "y" : -0.912594013248103
+    },
+    "BtnY" : {
+      "x" : 129.2962575343588,
+      "y" : 16.08522601483536
+    },
+    "DPadDown" : {
+      "x" : -140.74699678984248,
+      "y" : 96.14830092454602
+    },
+    "DPadLeft" : {
+      "x" : -146.8622276748888,
+      "y" : 75.31633556000517
+    },
+    "DPadRight" : {
+      "x" : -146.27712565768266,
+      "y" : 54.04302429570949
+    },
+    "DPadUp" : {
+      "x" : -139.29644577860938,
+      "y" : 34.58832801910025
+    },
+    "LB" : {
+      "x" : -123.28555096506231,
+      "y" : -80.53585130351419
+    },
+    "LT" : {
+      "x" : -124.42344615933746,
+      "y" : -60.494566028889444
+    },
+    "LeftStick" : {
+      "x" : -147.6839345023522,
+      "y" : 2.08622700200371
+    },
+    "RB" : {
+      "x" : 127.8842039343237,
+      "y" : -82.23332507916514
+    },
+    "RT" : {
+      "x" : 116.35700596004364,
+      "y" : -59.08930560328747
+    },
+    "RightStick" : {
+      "x" : 148.84410379133055,
+      "y" : 65.25821152191133
+    },
+    "Start" : {
+      "x" : 50.37942530330386,
+      "y" : -73.50660623996629
+    }
+  },
+  "profiles" : [
+    {
+      "chordMappings" : {
+        "leftTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        }
+      },
+      "id" : "E1F5C312-0E3E-4960-909B-2FC9A694149A",
+      "mappings" : {
+        "backButton" : {
+          "keyCode" : 48,
+          "keyDisplay" : "Tab",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "buttonA" : {
+          "mouseButton" : "left",
+          "type" : "click"
+        },
+        "buttonB" : {
+          "mouseButton" : "right",
+          "type" : "click"
+        },
+        "buttonX" : {
+          "keyCode" : 8,
+          "keyDisplay" : "C",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "buttonY" : {
+          "keyCode" : 9,
+          "keyDisplay" : "V",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "leftBumper" : {
+          "keyCode" : 6,
+          "keyDisplay" : "Z",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "leftStickButton" : {
+          "type" : "profileWheel"
+        },
+        "leftTrigger" : {
+          "type" : "drag"
+        },
+        "rightBumper" : {
+          "keyCode" : 49,
+          "keyDisplay" : "Space",
+          "modifiers" : 2,
+          "type" : "shortcut"
+        },
+        "rightStickButton" : {
+          "keyCode" : 53,
+          "keyDisplay" : "Esc",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "rightTrigger" : {
+          "type" : "none"
+        },
+        "startButton" : {
+          "keyCode" : 35,
+          "keyDisplay" : "P",
+          "modifiers" : 9,
+          "type" : "shortcut"
+        }
+      },
+      "name" : "默认配置",
+      "settings" : {
+        "cursorSpeed" : 800,
+        "deadZone" : 0.15,
+        "precisionMultiplier" : 0.3,
+        "scrollSpeed" : 5
+      }
+    },
+    {
+      "chordMappings" : {
+        "leftTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        }
+      },
+      "id" : "07F1645C-89F4-4857-9C50-ECC790DA767E",
+      "mappings" : {
+        "backButton" : {
+          "keyCode" : 48,
+          "keyDisplay" : "Tab",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "buttonA" : {
+          "mouseButton" : "left",
+          "type" : "click"
+        },
+        "buttonB" : {
+          "mouseButton" : "right",
+          "type" : "click"
+        },
+        "buttonX" : {
+          "keyCode" : 51,
+          "keyDisplay" : "⌫",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "buttonY" : {
+          "keyCode" : 9,
+          "keyDisplay" : "V",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "leftBumper" : {
+          "keyCode" : 6,
+          "keyDisplay" : "Z",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "leftStickButton" : {
+          "type" : "profileWheel"
+        },
+        "leftTrigger" : {
+          "type" : "drag"
+        },
+        "rightBumper" : {
+          "keyCode" : 49,
+          "keyDisplay" : "Space",
+          "modifiers" : 2,
+          "type" : "shortcut"
+        },
+        "rightStickButton" : {
+          "keyCode" : 53,
+          "keyDisplay" : "Esc",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "rightTrigger" : {
+          "type" : "none"
+        },
+        "startButton" : {
+          "keyCode" : 35,
+          "keyDisplay" : "P",
+          "modifiers" : 9,
+          "type" : "shortcut"
+        }
+      },
+      "name" : "Cursor",
+      "settings" : {
+        "cursorSpeed" : 800,
+        "deadZone" : 0.15,
+        "precisionMultiplier" : 0.3,
+        "scrollSpeed" : 5
+      }
+    },
+    {
+      "chordMappings" : {
+        "leftTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 8,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        },
+        "leftTrigger+rightTrigger+dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 10,
+          "type" : "shortcut"
+        }
+      },
+      "id" : "154B7C49-08FA-4DEB-9BCB-44600DD82AE1",
+      "mappings" : {
+        "backButton" : {
+          "keyCode" : 48,
+          "keyDisplay" : "Tab",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "buttonA" : {
+          "mouseButton" : "left",
+          "type" : "click"
+        },
+        "buttonB" : {
+          "mouseButton" : "right",
+          "type" : "click"
+        },
+        "buttonX" : {
+          "keyCode" : 13,
+          "keyDisplay" : "W",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "buttonY" : {
+          "keyCode" : 15,
+          "keyDisplay" : "R",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "dpadDown" : {
+          "keyCode" : 125,
+          "keyDisplay" : "↓",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadLeft" : {
+          "keyCode" : 123,
+          "keyDisplay" : "←",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadRight" : {
+          "keyCode" : 124,
+          "keyDisplay" : "→",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "dpadUp" : {
+          "keyCode" : 126,
+          "keyDisplay" : "↑",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "leftBumper" : {
+          "keyCode" : 6,
+          "keyDisplay" : "Z",
+          "modifiers" : 1,
+          "type" : "shortcut"
+        },
+        "leftStickButton" : {
+          "type" : "profileWheel"
+        },
+        "leftTrigger" : {
+          "type" : "drag"
+        },
+        "rightBumper" : {
+          "keyCode" : 49,
+          "keyDisplay" : "Space",
+          "modifiers" : 2,
+          "type" : "shortcut"
+        },
+        "rightStickButton" : {
+          "keyCode" : 36,
+          "keyDisplay" : "↵",
+          "modifiers" : 0,
+          "type" : "shortcut"
+        },
+        "rightTrigger" : {
+          "type" : "none"
+        },
+        "startButton" : {
+          "keyCode" : 35,
+          "keyDisplay" : "P",
+          "modifiers" : 9,
+          "type" : "shortcut"
+        }
+      },
+      "name" : "Xcode",
+      "settings" : {
+        "cursorSpeed" : 800,
+        "deadZone" : 0.15,
+        "precisionMultiplier" : 0.3,
+        "scrollSpeed" : 5
+      }
+    }
+  ]
+}

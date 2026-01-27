@@ -10,6 +10,7 @@
 - **視覺化按鍵圖** - 直觀顯示當前按鍵映射
 - **背景執行** - 基於 IOKit HID，視窗失去焦點也能控制
 - **App Switcher** - 按住 Back 鍵像 Cmd+Tab 一樣切換應用程式
+- **配置輪盤** - 按下 L3 快速切換配置
 - **自訂映射** - 可配置任意按鍵到任意動作
 
 ## 預設按鍵映射
@@ -25,19 +26,19 @@
 | **LB** | 復原 (⌘Z) / App Switcher 時切換上一個 |
 | **RB** | Option+Space / App Switcher 時切換下一個 |
 | **LT** | 拖曳模式（按住拖動檔案/文字） |
-| **RT** | 無動作 |
-| **L3** | Enter |
+| **RT** | Enter |
+| **L3** | 配置輪盤 |
 | **R3** | Esc |
 | **Start** | 命令面板 (⌘⇧P) |
 | **Back** | App Switcher (⌘Tab) |
-| **D-Pad** | 方向鍵 |
+| **D-Pad 上/下** | 方向鍵 |
+| **D-Pad 左/右** | Option + 方向鍵（按詞移動） |
 
 ### 組合鍵
 
 | 組合 | 功能 |
 |-----|------|
 | **LT + D-Pad** | Shift + 方向鍵（文字選擇） |
-| **LT + RT + D-Pad** | Shift + Option + 方向鍵（按詞選擇） |
 
 ## App Switcher 使用
 
@@ -53,16 +54,6 @@
 1. 開啟 `VibeController.xcodeproj`
 2. 按 Cmd+R 執行
 3. 首次執行授予輔助使用權限
-
-### 方式二：命令列服務
-
-```bash
-cd VibeControllerService
-swiftc -O -o VibeControllerService main.swift \
-  -framework Foundation -framework IOKit \
-  -framework CoreGraphics -framework AppKit
-./VibeControllerService
-```
 
 ## 權限要求
 

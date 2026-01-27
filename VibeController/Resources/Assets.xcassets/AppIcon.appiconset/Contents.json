@@ -1,7 +1,6 @@
 {
   "images" : [
     {
-      "filename" : "icon_16x16.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "16x16"
@@ -13,7 +12,6 @@
       "size" : "16x16"
     },
     {
-      "filename" : "icon_32x32.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "32x32"

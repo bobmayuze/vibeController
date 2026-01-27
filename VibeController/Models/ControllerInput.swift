@@ -2,7 +2,8 @@ import Foundation
 
 // MARK: - 手柄按键
 
-enum ControllerButton: String, Codable, CaseIterable, Hashable {
+enum ControllerButton: String, Codable, CaseIterable, Hashable, Identifiable {
+    var id: String { rawValue }
     case buttonA = "buttonA"
     case buttonB = "buttonB"
     case buttonX = "buttonX"
@@ -31,12 +32,12 @@ enum ControllerButton: String, Codable, CaseIterable, Hashable {
         case .rightBumper: return "RB"
         case .leftTrigger: return "LT"
         case .rightTrigger: return "RT"
-        case .leftStickButton: return "左摇杆按下"
-        case .rightStickButton: return "右摇杆按下"
-        case .dpadUp: return "十字键 ↑"
-        case .dpadDown: return "十字键 ↓"
-        case .dpadLeft: return "十字键 ←"
-        case .dpadRight: return "十字键 →"
+        case .leftStickButton: return "L3"
+        case .rightStickButton: return "R3"
+        case .dpadUp: return "D-Pad ↑"
+        case .dpadDown: return "D-Pad ↓"
+        case .dpadLeft: return "D-Pad ←"
+        case .dpadRight: return "D-Pad →"
         case .startButton: return "Start"
         case .backButton: return "Back"
         case .xboxButton: return "Xbox"

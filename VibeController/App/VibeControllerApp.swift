@@ -38,7 +38,7 @@ struct MenuBarContent: View {
         // 状态
         HStack {
             Circle().fill(hid.isConnected ? .green : .red).frame(width: 8, height: 8)
-            Text(hid.isConnected ? hid.controllerName : "未连接")
+            Text(hid.isConnected ? hid.controllerName : "Disconnected")
         }
         
         // 开关
@@ -46,7 +46,7 @@ struct MenuBarContent: View {
             get: { hid.isEnabled },
             set: { _ in hid.toggleEnabled() }
         )) {
-            Text("启用控制")
+            Text("Enable Control")
         }
         
         Divider()
@@ -54,7 +54,6 @@ struct MenuBarContent: View {
         Button("Settings...") {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
-        .keyboardShortcut(",", modifiers: .command)
         
         Button("Check for Updates...") {
             // TODO: 实现更新检查
@@ -65,6 +64,5 @@ struct MenuBarContent: View {
         Button("Quit") {
             NSApp.terminate(nil)
         }
-        .keyboardShortcut("q", modifiers: .command)
     }
 }

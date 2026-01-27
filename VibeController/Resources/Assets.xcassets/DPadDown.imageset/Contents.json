@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "D-Pad Down.svg",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

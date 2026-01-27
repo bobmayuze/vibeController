@@ -91,7 +91,11 @@ extension ControllerConfig {
         
         // 肩键
         mappings[.leftBumper] = .shortcut(modifiers: .command, keyCode: KeyCodes.z, display: "Z")
-        mappings[.rightBumper] = .shortcut(modifiers: [.command, .shift], keyCode: KeyCodes.z, display: "Z")
+        mappings[.rightBumper] = .shortcut(modifiers: .option, keyCode: KeyCodes.space, display: "Space")
+        
+        // 扳机键
+        mappings[.leftTrigger] = .drag  // LT：拖拽模式
+        mappings[.rightTrigger] = .shortcut(modifiers: [], keyCode: KeyCodes.returnKey, display: "↵")
         
         // 摇杆按下
         mappings[.leftStickButton] = .shortcut(modifiers: [], keyCode: KeyCodes.returnKey, display: "↵")
@@ -108,7 +112,7 @@ extension ControllerConfig {
         mappings[.backButton] = .shortcut(modifiers: .command, keyCode: KeyCodes.b, display: "B")
         
         return ControllerConfig(
-            name: "默认配置",
+            name: "Default",
             mappings: mappings,
             settings: .default
         )

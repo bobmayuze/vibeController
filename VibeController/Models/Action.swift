@@ -5,6 +5,7 @@ import Carbon.HIToolbox
 
 enum ActionType: String, Codable, CaseIterable {
     case mouseClick = "click"
+    case mouseDrag = "drag"
     case shortcut = "shortcut"
     case command = "command"
     case text = "text"
@@ -14,13 +15,14 @@ enum ActionType: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .mouseClick: return "鼠标点击"
-        case .shortcut: return "键盘快捷键"
-        case .command: return "运行命令"
-        case .text: return "输入文本"
-        case .mouseMove: return "鼠标移动"
-        case .scroll: return "滚动"
-        case .none: return "无动作"
+        case .mouseClick: return "Click"
+        case .mouseDrag: return "Drag"
+        case .shortcut: return "Shortcut"
+        case .command: return "Command"
+        case .text: return "Text"
+        case .mouseMove: return "Mouse Move"
+        case .scroll: return "Scroll"
+        case .none: return "None"
         }
     }
 }
@@ -34,9 +36,9 @@ enum MouseButton: String, Codable, CaseIterable {
     
     var displayName: String {
         switch self {
-        case .left: return "左键"
-        case .right: return "右键"
-        case .middle: return "中键"
+        case .left: return "Left"
+        case .right: return "Right"
+        case .middle: return "Middle"
         }
     }
 }
@@ -84,6 +86,7 @@ struct Action: Codable, Equatable, Hashable {
     // 预设动作
     static let leftClick = Action(type: .mouseClick, mouseButton: .left)
     static let rightClick = Action(type: .mouseClick, mouseButton: .right)
+    static let drag = Action(type: .mouseDrag)
     static let none = Action(type: .none)
     
     static func shortcut(modifiers: ModifierKeys, keyCode: Int, display: String) -> Action {
@@ -101,22 +104,24 @@ struct Action: Codable, Equatable, Hashable {
     var displayName: String {
         switch type {
         case .mouseClick:
-            return mouseButton?.displayName ?? "点击"
+            return mouseButton?.displayName ?? "Click"
+        case .mouseDrag:
+            return "Drag"
         case .shortcut:
             let mods = modifiers?.displayString ?? ""
             let key = keyDisplay ?? ""
             return "\(mods)\(key)"
         case .command:
-            return commandString ?? "命令"
+            return commandString ?? "Cmd"
         case .text:
             let preview = textToType?.prefix(10) ?? ""
-            return "输入: \(preview)"
+            return "Text: \(preview)"
         case .mouseMove:
-            return "鼠标移动"
+            return "Move"
         case .scroll:
-            return "滚动"
+            return "Scroll"
         case .none:
-            return "无"
+            return "—"
         }
     }
 }
@@ -130,6 +135,7 @@ struct KeyCodes {
     static let p: Int = Int(kVK_ANSI_P)
     static let v: Int = Int(kVK_ANSI_V)
     static let z: Int = Int(kVK_ANSI_Z)
+    static let space: Int = Int(kVK_Space)
     static let returnKey: Int = Int(kVK_Return)
     static let escape: Int = Int(kVK_Escape)
     static let upArrow: Int = Int(kVK_UpArrow)

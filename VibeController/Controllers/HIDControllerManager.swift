@@ -217,8 +217,17 @@ class HIDControllerManager: ObservableObject {
         lastDPad = value
         
         DispatchQueue.main.async {
-            self.pressedButtons.remove("DPad")
-            if value != 0 && value != 8 { self.pressedButtons.insert("DPad") }
+            self.pressedButtons.remove("DPadUp")
+            self.pressedButtons.remove("DPadDown")
+            self.pressedButtons.remove("DPadLeft")
+            self.pressedButtons.remove("DPadRight")
+            switch value {
+            case 1: self.pressedButtons.insert("DPadUp")
+            case 3: self.pressedButtons.insert("DPadRight")
+            case 5: self.pressedButtons.insert("DPadDown")
+            case 7: self.pressedButtons.insert("DPadLeft")
+            default: break
+            }
         }
         
         switch value {

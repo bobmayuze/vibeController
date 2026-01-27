@@ -31,6 +31,7 @@ enum AppLanguage: String, CaseIterable {
     }
 }
 
+@MainActor
 class LocalizationManager: ObservableObject {
     static let shared = LocalizationManager()
     
@@ -270,6 +271,126 @@ class LocalizationManager: ObservableObject {
                 .japanese: "設定の読み込みに失敗しました",
                 .simplifiedChinese: "配置导入失败",
                 .traditionalChinese: "配置導入失敗"
+            ],
+            "manageProfiles": [
+                .english: "Manage Profiles",
+                .japanese: "プロファイル管理",
+                .simplifiedChinese: "管理配置",
+                .traditionalChinese: "管理配置"
+            ],
+            "profiles": [
+                .english: "Profiles",
+                .japanese: "プロファイル",
+                .simplifiedChinese: "配置列表",
+                .traditionalChinese: "配置列表"
+            ],
+            "newProfile": [
+                .english: "New Profile",
+                .japanese: "新規プロファイル",
+                .simplifiedChinese: "新建配置",
+                .traditionalChinese: "新建配置"
+            ],
+            "duplicateProfile": [
+                .english: "Duplicate",
+                .japanese: "複製",
+                .simplifiedChinese: "复制",
+                .traditionalChinese: "複製"
+            ],
+            "deleteProfile": [
+                .english: "Delete",
+                .japanese: "削除",
+                .simplifiedChinese: "删除",
+                .traditionalChinese: "刪除"
+            ],
+            "renameProfile": [
+                .english: "Rename",
+                .japanese: "名前変更",
+                .simplifiedChinese: "重命名",
+                .traditionalChinese: "重新命名"
+            ],
+            "profileName": [
+                .english: "Profile Name",
+                .japanese: "プロファイル名",
+                .simplifiedChinese: "配置名称",
+                .traditionalChinese: "配置名稱"
+            ],
+            "current": [
+                .english: "Current",
+                .japanese: "使用中",
+                .simplifiedChinese: "当前",
+                .traditionalChinese: "當前"
+            ],
+            "wheelHint": [
+                .english: "Hold button to open wheel",
+                .japanese: "ボタン長押しでホイール表示",
+                .simplifiedChinese: "按住按钮打开轮盘",
+                .traditionalChinese: "按住按鈕打開輪盤"
+            ],
+            "selectProfilesToExport": [
+                .english: "Select Profiles to Export",
+                .japanese: "エクスポートするプロファイルを選択",
+                .simplifiedChinese: "选择要导出的配置",
+                .traditionalChinese: "選擇要導出的配置"
+            ],
+            "selectProfilesToImport": [
+                .english: "Select Profiles to Import",
+                .japanese: "インポートするプロファイルを選択",
+                .simplifiedChinese: "选择要导入的配置",
+                .traditionalChinese: "選擇要導入的配置"
+            ],
+            "selectAll": [
+                .english: "Select All",
+                .japanese: "すべて選択",
+                .simplifiedChinese: "全选",
+                .traditionalChinese: "全選"
+            ],
+            "deselectAll": [
+                .english: "Deselect All",
+                .japanese: "選択解除",
+                .simplifiedChinese: "取消全选",
+                .traditionalChinese: "取消全選"
+            ],
+            "includeLayout": [
+                .english: "Include Button Layout",
+                .japanese: "ボタンレイアウトを含める",
+                .simplifiedChinese: "包含按钮布局",
+                .traditionalChinese: "包含按鈕佈局"
+            ],
+            "profilesSelected": [
+                .english: "profiles selected",
+                .japanese: "個のプロファイルを選択",
+                .simplifiedChinese: "个配置已选择",
+                .traditionalChinese: "個配置已選擇"
+            ],
+            "noProfileSelected": [
+                .english: "Please select at least one profile",
+                .japanese: "少なくとも1つのプロファイルを選択してください",
+                .simplifiedChinese: "请至少选择一个配置",
+                .traditionalChinese: "請至少選擇一個配置"
+            ],
+            "importedProfiles": [
+                .english: "profiles imported",
+                .japanese: "個のプロファイルをインポートしました",
+                .simplifiedChinese: "个配置已导入",
+                .traditionalChinese: "個配置已導入"
+            ],
+            "cancel": [
+                .english: "Cancel",
+                .japanese: "キャンセル",
+                .simplifiedChinese: "取消",
+                .traditionalChinese: "取消"
+            ],
+            "buttons": [
+                .english: "buttons",
+                .japanese: "ボタン",
+                .simplifiedChinese: "个按钮",
+                .traditionalChinese: "個按鈕"
+            ],
+            "chordMappings": [
+                .english: "combos",
+                .japanese: "コンボ",
+                .simplifiedChinese: "个组合键",
+                .traditionalChinese: "個組合鍵"
             ]
         ]
         
@@ -277,6 +398,7 @@ class LocalizationManager: ObservableObject {
     }
 }
 
+@MainActor
 struct MainView: View {
     @ObservedObject var hid = HIDControllerManager.shared
     @ObservedObject var l10n = LocalizationManager.shared
@@ -285,6 +407,11 @@ struct MainView: View {
     @StateObject var configManager = ConfigManager.shared
     @State private var editingButton: ControllerButton?
     @State private var editingChord: ButtonChord?
+    @State private var showProfileManager = false
+    @State private var showExportSheet = false
+    @State private var showImportSheet = false
+    @State private var importedProfiles: [ControllerConfig] = []
+    @State private var importedLayout: [String: [String: CGFloat]]? = nil
     
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -310,6 +437,38 @@ struct MainView: View {
             HStack {
                 Image(systemName: "gamecontroller.fill").font(.title2)
                 Text("Vibe Controller").font(.headline)
+                
+                Spacer().frame(width: 20)
+                
+                // Profile 选择器
+                HStack(spacing: 8) {
+                    Image(systemName: "folder.fill").foregroundColor(.secondary)
+                    Picker("", selection: Binding(
+                        get: { configManager.currentConfig.id },
+                        set: { id in
+                            if let config = configManager.configs.first(where: { $0.id == id }) {
+                                configManager.selectConfig(config)
+                            }
+                        }
+                    )) {
+                        ForEach(configManager.configs) { config in
+                            Text(config.name).tag(config.id)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 120)
+                    
+                    Button(action: { showProfileManager = true }) {
+                        Image(systemName: "gearshape")
+                    }
+                    .buttonStyle(.borderless)
+                    .help(l10n.localized("manageProfiles"))
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+                
                 Spacer()
                 
                 // 语言选择
@@ -385,7 +544,7 @@ struct MainView: View {
                 Spacer()
                 
                 // Export/Load 按钮
-                Button(action: { exportFullConfig() }) {
+                Button(action: { showExportSheet = true }) {
                     Label(l10n.localized("exportConfig"), systemImage: "square.and.arrow.up")
                 }
                 .buttonStyle(.bordered)
@@ -419,52 +578,30 @@ struct MainView: View {
         .sheet(item: $editingChord) { chord in
             UnifiedChordEditorView(mode: .edit(chord), configManager: configManager, l10n: l10n)
         }
-    }
-    
-    // MARK: - 导出完整配置
-    
-    private func exportFullConfig() {
-        let panel = NSSavePanel()
-        panel.allowedContentTypes = [.json]
-        panel.nameFieldStringValue = "vibe_controller_config.json"
-        panel.title = l10n.localized("exportConfig")
-        
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            
-            // 创建完整配置结构
-            let fullConfig = FullExportConfig(
-                buttonPositions: layout.positions.mapValues { ["x": $0.x, "y": $0.y] },
-                keyMappings: configManager.currentConfig
+        .sheet(isPresented: $showProfileManager) {
+            ProfileManagerView(configManager: configManager, l10n: l10n)
+        }
+        .sheet(isPresented: $showExportSheet) {
+            ExportProfileSelectionView(
+                configManager: configManager,
+                layout: layout,
+                l10n: l10n,
+                isPresented: $showExportSheet
             )
-            
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-                let data = try encoder.encode(fullConfig)
-                try data.write(to: url)
-                
-                print("✅ 导出成功:")
-                print("   - 按钮映射: \(fullConfig.keyMappings.mappings.count) 个")
-                print("   - 组合键: \(fullConfig.keyMappings.chordMappings.count) 个")
-                for (chord, action) in fullConfig.keyMappings.chordMappings {
-                    print("     \(chord.displayName) → \(action.displayName)")
-                }
-                
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = l10n.localized("exportSuccess")
-                    alert.informativeText = url.path
-                    alert.alertStyle = .informational
-                    alert.runModal()
-                }
-            } catch {
-                print("❌ 导出失败: \(error)")
-            }
+        }
+        .sheet(isPresented: $showImportSheet) {
+            ImportProfileSelectionView(
+                profiles: importedProfiles,
+                buttonPositions: importedLayout,
+                configManager: configManager,
+                layout: layout,
+                l10n: l10n,
+                isPresented: $showImportSheet
+            )
         }
     }
     
-    // MARK: - 导入完整配置
+    // MARK: - 导入配置（从文件读取后显示选择界面）
     
     private func loadFullConfig() {
         let panel = NSOpenPanel()
@@ -477,25 +614,24 @@ struct MainView: View {
             
             do {
                 let data = try Data(contentsOf: url)
-                let fullConfig = try JSONDecoder().decode(FullExportConfig.self, from: data)
                 
-                // 恢复按钮位置
-                layout.positions = fullConfig.buttonPositions.mapValues {
-                    CGPoint(x: $0["x"] ?? 0, y: $0["y"] ?? 0)
+                // 尝试新格式（多配置）
+                if let multiConfig = try? JSONDecoder().decode(MultiProfileExportConfig.self, from: data) {
+                    importedProfiles = multiConfig.profiles
+                    importedLayout = multiConfig.buttonPositions
+                    showImportSheet = true
+                    return
                 }
-                layout.savePositions()
                 
-                // 恢复键位映射
-                var updatedConfig = fullConfig.keyMappings
-                updatedConfig.id = configManager.currentConfig.id // 保持当前ID
-                configManager.updateConfig(updatedConfig)
-                
-                DispatchQueue.main.async {
-                    let alert = NSAlert()
-                    alert.messageText = l10n.localized("loadSuccess")
-                    alert.alertStyle = .informational
-                    alert.runModal()
+                // 兼容旧格式（单配置）
+                if let singleConfig = try? JSONDecoder().decode(FullExportConfig.self, from: data) {
+                    importedProfiles = [singleConfig.keyMappings]
+                    importedLayout = singleConfig.buttonPositions
+                    showImportSheet = true
+                    return
                 }
+                
+                throw NSError(domain: "VibeController", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid config format"])
             } catch {
                 print("❌ 导入失败: \(error)")
                 DispatchQueue.main.async {
@@ -517,8 +653,296 @@ struct FullExportConfig: Codable {
     let keyMappings: ControllerConfig
 }
 
+// MARK: - 多配置导出结构
+
+struct MultiProfileExportConfig: Codable {
+    let buttonPositions: [String: [String: CGFloat]]?
+    let profiles: [ControllerConfig]
+}
+
+// MARK: - 导出配置选择视图
+
+struct ExportProfileSelectionView: View {
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var layout: ButtonLayoutManager
+    @ObservedObject var l10n: LocalizationManager
+    @Binding var isPresented: Bool
+    
+    @State private var selectedIds: Set<UUID> = []
+    @State private var includeLayout = true
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(l10n.localized("selectProfilesToExport"))
+                .font(.headline)
+            
+            // 全选/取消全选
+            HStack {
+                Button(l10n.localized("selectAll")) {
+                    selectedIds = Set(configManager.configs.map { $0.id })
+                }
+                .buttonStyle(.borderless)
+                
+                Button(l10n.localized("deselectAll")) {
+                    selectedIds.removeAll()
+                }
+                .buttonStyle(.borderless)
+                
+                Spacer()
+                
+                Text("\(selectedIds.count) \(l10n.localized("profilesSelected"))")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            }
+            
+            // 配置列表
+            List(configManager.configs) { config in
+                HStack {
+                    Image(systemName: selectedIds.contains(config.id) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedIds.contains(config.id) ? .accentColor : .secondary)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(config.name)
+                            .fontWeight(configManager.currentConfig.id == config.id ? .semibold : .regular)
+                        
+                        Text("\(config.mappings.count) \(l10n.localized("buttons")), \(config.chordMappings.count) \(l10n.localized("chordMappings"))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    if configManager.currentConfig.id == config.id {
+                        Text(l10n.localized("current"))
+                            .font(.caption)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if selectedIds.contains(config.id) {
+                        selectedIds.remove(config.id)
+                    } else {
+                        selectedIds.insert(config.id)
+                    }
+                }
+            }
+            .frame(height: 200)
+            
+            // 包含布局选项
+            Toggle(l10n.localized("includeLayout"), isOn: $includeLayout)
+            
+            Divider()
+            
+            // 按钮
+            HStack {
+                Button(l10n.localized("cancel")) {
+                    isPresented = false
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Spacer()
+                
+                Button(l10n.localized("exportConfig")) {
+                    exportSelectedProfiles()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(selectedIds.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 400)
+        .onAppear {
+            // 默认选中当前配置
+            selectedIds = [configManager.currentConfig.id]
+        }
+    }
+    
+    private func exportSelectedProfiles() {
+        let selectedConfigs = configManager.configs.filter { selectedIds.contains($0.id) }
+        guard !selectedConfigs.isEmpty else { return }
+        
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.nameFieldStringValue = "vibe_controller_config.json"
+        panel.title = l10n.localized("exportConfig")
+        
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            
+            let exportConfig = MultiProfileExportConfig(
+                buttonPositions: includeLayout ? layout.positions.mapValues { ["x": $0.x, "y": $0.y] } : nil,
+                profiles: selectedConfigs
+            )
+            
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                let data = try encoder.encode(exportConfig)
+                try data.write(to: url)
+                
+                print("✅ 导出成功: \(selectedConfigs.count) 个配置")
+                
+                DispatchQueue.main.async {
+                    isPresented = false
+                    let alert = NSAlert()
+                    alert.messageText = l10n.localized("exportSuccess")
+                    alert.informativeText = "\(selectedConfigs.count) \(l10n.localized("profilesSelected"))\n\(url.path)"
+                    alert.alertStyle = .informational
+                    alert.runModal()
+                }
+            } catch {
+                print("❌ 导出失败: \(error)")
+            }
+        }
+    }
+}
+
+// MARK: - 导入配置选择视图
+
+struct ImportProfileSelectionView: View {
+    let profiles: [ControllerConfig]
+    let buttonPositions: [String: [String: CGFloat]]?
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var layout: ButtonLayoutManager
+    @ObservedObject var l10n: LocalizationManager
+    @Binding var isPresented: Bool
+    
+    @State private var selectedIds: Set<UUID> = []
+    @State private var importLayout = true
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(l10n.localized("selectProfilesToImport"))
+                .font(.headline)
+            
+            // 全选/取消全选
+            HStack {
+                Button(l10n.localized("selectAll")) {
+                    selectedIds = Set(profiles.map { $0.id })
+                }
+                .buttonStyle(.borderless)
+                
+                Button(l10n.localized("deselectAll")) {
+                    selectedIds.removeAll()
+                }
+                .buttonStyle(.borderless)
+                
+                Spacer()
+                
+                Text("\(selectedIds.count) \(l10n.localized("profilesSelected"))")
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+            }
+            
+            // 配置列表
+            List(profiles) { config in
+                HStack {
+                    Image(systemName: selectedIds.contains(config.id) ? "checkmark.circle.fill" : "circle")
+                        .foregroundColor(selectedIds.contains(config.id) ? .accentColor : .secondary)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(config.name)
+                        
+                        Text("\(config.mappings.count) \(l10n.localized("buttons")), \(config.chordMappings.count) \(l10n.localized("chordMappings"))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if selectedIds.contains(config.id) {
+                        selectedIds.remove(config.id)
+                    } else {
+                        selectedIds.insert(config.id)
+                    }
+                }
+            }
+            .frame(height: 200)
+            
+            // 包含布局选项（如果导入文件中有布局）
+            if buttonPositions != nil {
+                Toggle(l10n.localized("includeLayout"), isOn: $importLayout)
+            }
+            
+            Divider()
+            
+            // 按钮
+            HStack {
+                Button(l10n.localized("cancel")) {
+                    isPresented = false
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Spacer()
+                
+                Button(l10n.localized("loadConfig")) {
+                    importSelectedProfiles()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(selectedIds.isEmpty)
+            }
+        }
+        .padding()
+        .frame(width: 400)
+        .onAppear {
+            // 默认全选
+            selectedIds = Set(profiles.map { $0.id })
+        }
+    }
+    
+    private func importSelectedProfiles() {
+        let selectedConfigs = profiles.filter { selectedIds.contains($0.id) }
+        guard !selectedConfigs.isEmpty else { return }
+        
+        // 导入布局
+        if importLayout, let positions = buttonPositions {
+            layout.positions = positions.mapValues {
+                CGPoint(x: $0["x"] ?? 0, y: $0["y"] ?? 0)
+            }
+            layout.savePositions()
+        }
+        
+        // 导入配置（生成新ID避免冲突）
+        var importedCount = 0
+        for config in selectedConfigs {
+            var newConfig = config
+            newConfig.id = UUID()
+            
+            // 检查是否有同名配置
+            let existingNames = configManager.configs.map { $0.name }
+            if existingNames.contains(config.name) {
+                var counter = 1
+                var newName = "\(config.name) (\(counter))"
+                while existingNames.contains(newName) {
+                    counter += 1
+                    newName = "\(config.name) (\(counter))"
+                }
+                newConfig.name = newName
+            }
+            
+            configManager.addConfig(newConfig)
+            importedCount += 1
+        }
+        
+        isPresented = false
+        
+        let alert = NSAlert()
+        alert.messageText = l10n.localized("loadSuccess")
+        alert.informativeText = "\(importedCount) \(l10n.localized("importedProfiles"))"
+        alert.alertStyle = .informational
+        alert.runModal()
+    }
+}
+
 // MARK: - 按钮布局管理器
 
+@MainActor
 class ButtonLayoutManager: ObservableObject {
     static let shared = ButtonLayoutManager()
     
@@ -635,6 +1059,7 @@ class ButtonLayoutManager: ObservableObject {
 
 // MARK: - 控制器叠加视图
 
+@MainActor
 struct ControllerOverlayView: View {
     @ObservedObject var hid: HIDControllerManager
     @ObservedObject var layout: ButtonLayoutManager
@@ -671,7 +1096,6 @@ struct ControllerOverlayView: View {
     
     // 获取摇杆按下的标签（带"按下："前缀）
     private func stickPressLabel(for button: ControllerButton) -> String {
-        let action = configManager.action(for: button)
         let pressPrefix: String
         switch l10n.currentLanguage {
         case .english: pressPrefix = "Press: "
@@ -679,6 +1103,8 @@ struct ControllerOverlayView: View {
         case .simplifiedChinese: pressPrefix = "按下: "
         case .traditionalChinese: pressPrefix = "按下: "
         }
+        
+        let action = configManager.action(for: button)
         return pressPrefix + action.displayName
     }
     
@@ -716,12 +1142,12 @@ struct ControllerOverlayView: View {
             
             // 左摇杆 - 左侧，文字在左
             DraggableButton(key: "LeftStick", layout: layout, scale: scale, onTap: { editingButton = .leftStickButton }) {
-                SVGStickOverlay(imageName: "LeftStick", action: l10n.localized("moveMouse"), isActive: hid.leftStickActive, l3Label: stickPressLabel(for: .leftStickButton), l3Active: hid.pressedButtons.contains("L3"), editMode: layout.isEditMode, stickX: hid.leftStickXValue, stickY: hid.leftStickYValue, size: 36 * scale, textAlign: .left, scale: scale)
+                SVGStickOverlay(imageName: "LeftStick", action: l10n.localized("moveMouse"), isActive: hid.leftStickActive, l3Label: stickPressLabel(for: .leftStickButton), l3Active: hid.pressedButtons.contains("LS↓"), editMode: layout.isEditMode, stickX: hid.leftStickXValue, stickY: hid.leftStickYValue, size: 36 * scale, textAlign: .left, scale: scale)
             }
             
             // 右摇杆 - 右侧，文字在右
             DraggableButton(key: "RightStick", layout: layout, scale: scale, onTap: { editingButton = .rightStickButton }) {
-                SVGStickOverlay(imageName: "RightStick", action: l10n.localized("moveScroll"), isActive: hid.rightStickActive, l3Label: stickPressLabel(for: .rightStickButton), l3Active: hid.pressedButtons.contains("R3"), editMode: layout.isEditMode, stickX: hid.rightStickXValue, stickY: hid.rightStickYValue, size: 36 * scale, textAlign: .right, scale: scale)
+                SVGStickOverlay(imageName: "RightStick", action: l10n.localized("moveScroll"), isActive: hid.rightStickActive, l3Label: stickPressLabel(for: .rightStickButton), l3Active: hid.pressedButtons.contains("RS↓"), editMode: layout.isEditMode, stickX: hid.rightStickXValue, stickY: hid.rightStickYValue, size: 36 * scale, textAlign: .right, scale: scale)
             }
             
             // D-Pad Up
@@ -1140,8 +1566,627 @@ struct SVGStickOverlay: View {
     }
 }
 
+// MARK: - Profile 轮盘选择视图 (带预览)
+
+@MainActor
+struct ProfileWheelView: View {
+    @ObservedObject var configManager: ConfigManager
+    let selectedIndex: Int
+    let windowSize: CGSize
+    
+    var selectedConfig: ControllerConfig? {
+        guard selectedIndex >= 0 && selectedIndex < configManager.configs.count else { return nil }
+        return configManager.configs[selectedIndex]
+    }
+    
+    // 动态计算 scale 让内容填满窗口
+    private var dynamicScale: CGFloat {
+        // 基础内容尺寸 (scale=1 时)：
+        // - 轮盘直径: 360 (outerRadius=180)
+        // - 预览宽度: 420 * 1.45 = 609
+        // - 间距: 50
+        // - 总宽度约: 1020
+        // - 高度约: 400 (轮盘 360 + 边距)
+        let baseContentWidth: CGFloat = 1020
+        let baseContentHeight: CGFloat = 420
+        
+        // 留出边距
+        let availableWidth = windowSize.width * 0.92
+        let availableHeight = windowSize.height * 0.88
+        
+        // 取较小的缩放比，确保内容不超出
+        return min(availableWidth / baseContentWidth, availableHeight / baseContentHeight)
+    }
+    
+    var body: some View {
+        ZStack {
+            // 半透明背景
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.black.opacity(0.88))
+            
+            // 内容居中
+            HStack(spacing: 50 * dynamicScale) {
+                // 左边：轮盘
+                ProfileWheelDonut(configManager: configManager, selectedIndex: selectedIndex, scale: dynamicScale)
+                
+                // 右边：控制器布局预览
+                if let config = selectedConfig {
+                    ControllerLayoutPreview(config: config, scale: dynamicScale)
+                }
+            }
+        }
+        .frame(width: windowSize.width, height: windowSize.height)
+    }
+}
+
+// Donut 轮盘部分
+@MainActor
+struct ProfileWheelDonut: View {
+    @ObservedObject var configManager: ConfigManager
+    let selectedIndex: Int
+    let scale: CGFloat
+    
+    private var outerRadius: CGFloat { 180 * scale }
+    private var innerRadius: CGFloat { 85 * scale }
+    private var gapWidth: CGFloat { 6 * scale }  // 固定像素间隙
+    
+    private var donutSize: CGFloat { outerRadius * 2 }
+    
+    var body: some View {
+        ZStack {
+            // Donut 扇形 - 所有扇形使用相同的固定 frame 确保一致性
+            ForEach(Array(configManager.configs.enumerated()), id: \.element.id) { index, config in
+                let total = configManager.configs.count
+                let isSelected = index == selectedIndex
+                let isCurrent = config.id == configManager.currentConfig.id
+                
+                DonutSegment(
+                    startAngle: startAngle(for: index, total: total),
+                    endAngle: endAngle(for: index, total: total),
+                    innerRadius: innerRadius,
+                    outerRadius: outerRadius,
+                    gapWidth: gapWidth
+                )
+                .fill(segmentColor(isSelected: isSelected, isCurrent: isCurrent))
+                .frame(width: donutSize, height: donutSize)  // 固定 frame
+                .animation(.easeOut(duration: 0.15), value: isSelected)
+                
+                // 扇形上的文字标签
+                let midAngle = (startAngle(for: index, total: total) + endAngle(for: index, total: total)) / 2
+                let labelRadius = (innerRadius + outerRadius) / 2
+                
+                VStack(spacing: 4 * scale) {
+                    Image(systemName: isCurrent ? "checkmark.circle.fill" : "folder.fill")
+                        .font(.system(size: 24 * scale))
+                    Text(config.name)
+                        .font(.system(size: 14 * scale, weight: isSelected ? .bold : .medium))
+                        .lineLimit(1)
+                }
+                .foregroundColor(.white)
+                .offset(
+                    x: cos(midAngle - .pi / 2) * labelRadius,
+                    y: sin(midAngle - .pi / 2) * labelRadius
+                )
+            }
+            
+            // 中心圆
+            Circle()
+                .fill(Color.black.opacity(0.95))
+                .frame(width: innerRadius * 2 - 10, height: innerRadius * 2 - 10)
+            
+            // 中心内容
+            VStack(spacing: 6 * scale) {
+                Image(systemName: "gamecontroller.fill")
+                    .font(.system(size: 36 * scale))
+                    .foregroundColor(.white.opacity(0.9))
+                if selectedIndex >= 0 && selectedIndex < configManager.configs.count {
+                    Text(configManager.configs[selectedIndex].name)
+                        .font(.system(size: 16 * scale, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .frame(width: donutSize + 30, height: donutSize + 30)
+    }
+    
+    private func startAngle(for index: Int, total: Int) -> Double {
+        guard total > 0 else { return 0 }
+        return (Double(index) / Double(total)) * 2 * .pi
+    }
+    
+    private func endAngle(for index: Int, total: Int) -> Double {
+        guard total > 0 else { return 0 }
+        return (Double(index + 1) / Double(total)) * 2 * .pi
+    }
+    
+    private func segmentColor(isSelected: Bool, isCurrent: Bool) -> Color {
+        if isSelected {
+            return Color.blue
+        } else if isCurrent {
+            return Color.green.opacity(0.7)
+        } else {
+            return Color.white.opacity(0.15)
+        }
+    }
+}
+
+// 控制器布局预览 (使用与主界面相同的可视化)
+@MainActor
+struct ControllerLayoutPreview: View {
+    let config: ControllerConfig
+    let scale: CGFloat
+    @ObservedObject var layout = ButtonLayoutManager.shared
+    @ObservedObject var l10n = LocalizationManager.shared
+    
+    private let baseWidth: CGFloat = 420
+    
+    // 获取按钮的动作显示名称
+    private func actionDisplayName(for button: ControllerButton) -> String {
+        return config.action(for: button).displayName
+    }
+    
+    // 获取摇杆按下的标签
+    private func stickPressLabel(for button: ControllerButton) -> String {
+        let pressPrefix: String
+        switch l10n.currentLanguage {
+        case .english: pressPrefix = "Press: "
+        case .japanese: pressPrefix = "押下: "
+        case .simplifiedChinese: pressPrefix = "按下: "
+        case .traditionalChinese: pressPrefix = "按下: "
+        }
+        return pressPrefix + config.action(for: button).displayName
+    }
+    
+    var body: some View {
+        VStack(spacing: 12 * scale) {
+            // 标题
+            Text(config.name)
+                .font(.system(size: 20 * scale, weight: .bold))
+                .foregroundColor(.white)
+            
+            // 控制器布局 (复用主界面的结构)
+            let previewScale = scale * 1.45  // 预览缩放 (增大30%)
+            let targetWidth = baseWidth * previewScale
+            
+            ZStack {
+                // 控制器背景图 (使用模板模式渲染为白色)
+                Image("ControllerImage")
+                    .renderingMode(.template)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: targetWidth)
+                    .foregroundColor(.white.opacity(0.85))
+                
+                // LT
+                StaticButtonOverlay(key: "LT", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "LT", action: actionDisplayName(for: .leftTrigger), isActive: false, size: 27 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                
+                // LB
+                StaticButtonOverlay(key: "LB", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "LB", action: actionDisplayName(for: .leftBumper), isActive: false, size: 27 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                
+                // RT
+                StaticButtonOverlay(key: "RT", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "RT", action: actionDisplayName(for: .rightTrigger), isActive: false, size: 27 * previewScale, textAlign: .right, scale: previewScale)
+                }
+                
+                // RB
+                StaticButtonOverlay(key: "RB", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "RB", action: actionDisplayName(for: .rightBumper), isActive: false, size: 27 * previewScale, textAlign: .right, scale: previewScale)
+                }
+                
+                // 左摇杆
+                StaticButtonOverlay(key: "LeftStick", layout: layout, scale: previewScale) {
+                    SVGStickOverlay(imageName: "LeftStick", action: l10n.localized("moveMouse"), isActive: false, l3Label: stickPressLabel(for: .leftStickButton), l3Active: false, size: 36 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                
+                // 右摇杆
+                StaticButtonOverlay(key: "RightStick", layout: layout, scale: previewScale) {
+                    SVGStickOverlay(imageName: "RightStick", action: l10n.localized("moveScroll"), isActive: false, l3Label: stickPressLabel(for: .rightStickButton), l3Active: false, size: 36 * previewScale, textAlign: .right, scale: previewScale)
+                }
+                
+                // D-Pad
+                StaticButtonOverlay(key: "DPadUp", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "DPadUp", action: actionDisplayName(for: .dpadUp), isActive: false, size: 20 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "DPadDown", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "DPadDown", action: actionDisplayName(for: .dpadDown), isActive: false, size: 20 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "DPadLeft", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "DPadLeft", action: actionDisplayName(for: .dpadLeft), isActive: false, size: 20 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "DPadRight", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "DPadRight", action: actionDisplayName(for: .dpadRight), isActive: false, size: 20 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                
+                // Back & Start
+                StaticButtonOverlay(key: "Back", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "ViewBtn", action: actionDisplayName(for: .backButton), isActive: false, size: 20 * previewScale, textAlign: .left, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "Start", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "MenuBtn", action: actionDisplayName(for: .startButton), isActive: false, size: 20 * previewScale, textAlign: .right, scale: previewScale)
+                }
+                
+                // ABXY
+                StaticButtonOverlay(key: "BtnY", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "BtnY", action: actionDisplayName(for: .buttonY), isActive: false, size: 16 * previewScale, activeColor: .orange, textAlign: .right, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "BtnX", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "BtnX", action: actionDisplayName(for: .buttonX), isActive: false, size: 16 * previewScale, activeColor: .blue, textAlign: .right, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "BtnB", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "BtnB", action: actionDisplayName(for: .buttonB), isActive: false, size: 16 * previewScale, activeColor: .red, textAlign: .right, scale: previewScale)
+                }
+                StaticButtonOverlay(key: "BtnA", layout: layout, scale: previewScale) {
+                    SVGButtonOverlay(imageName: "BtnA", action: actionDisplayName(for: .buttonA), isActive: false, size: 16 * previewScale, activeColor: .green, textAlign: .right, scale: previewScale)
+                }
+            }
+            .frame(width: targetWidth, height: targetWidth / 1.9)
+            .colorScheme(.dark)  // 强制深色模式，让 SVG 图标显示为白色
+        }
+    }
+}
+
+// 静态按钮位置容器 (无拖拽功能)
+struct StaticButtonOverlay<Content: View>: View {
+    let key: String
+    @ObservedObject var layout: ButtonLayoutManager
+    var scale: CGFloat = 1.0
+    let content: () -> Content
+    
+    var body: some View {
+        content()
+            .offset(
+                x: layout.position(for: key).x * scale,
+                y: layout.position(for: key).y * scale
+            )
+    }
+}
+
+// Donut 扇形 Shape (使用固定像素间隙)
+struct DonutSegment: Shape {
+    let startAngle: Double
+    let endAngle: Double
+    let innerRadius: CGFloat
+    let outerRadius: CGFloat
+    var gapWidth: CGFloat = 4  // 固定像素间隙宽度
+    
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        var path = Path()
+        
+        // 根据半径计算角度偏移，使间隙宽度一致
+        let innerGapAngle = gapWidth / (2 * innerRadius)
+        let outerGapAngle = gapWidth / (2 * outerRadius)
+        
+        // 从 12 点钟方向开始（-π/2）
+        let adjustedStartOuter = startAngle - .pi / 2 + outerGapAngle
+        let adjustedEndOuter = endAngle - .pi / 2 - outerGapAngle
+        let adjustedStartInner = startAngle - .pi / 2 + innerGapAngle
+        let adjustedEndInner = endAngle - .pi / 2 - innerGapAngle
+        
+        // 外圈弧线
+        path.addArc(center: center, radius: outerRadius,
+                    startAngle: .radians(adjustedStartOuter),
+                    endAngle: .radians(adjustedEndOuter),
+                    clockwise: false)
+        
+        // 连接到内圈
+        path.addLine(to: CGPoint(
+            x: center.x + innerRadius * CGFloat(cos(adjustedEndInner)),
+            y: center.y + innerRadius * CGFloat(sin(adjustedEndInner))
+        ))
+        
+        // 内圈弧线
+        path.addArc(center: center, radius: innerRadius,
+                    startAngle: .radians(adjustedEndInner),
+                    endAngle: .radians(adjustedStartInner),
+                    clockwise: true)
+        
+        path.closeSubpath()
+        
+        return path
+    }
+}
+
+// MARK: - Profile 轮盘窗口控制器
+
+@MainActor
+class ProfileWheelWindowController: NSObject, ObservableObject {
+    static let shared = ProfileWheelWindowController()
+    
+    @Published var isVisible = false
+    @Published var selectedIndex = 0
+    
+    // 追踪是哪个摇杆触发的 (true = 左摇杆, false = 右摇杆)
+    var triggeredByLeftStick = true
+    
+    private var window: NSWindow?
+    private var hostingView: NSHostingView<ProfileWheelView>?
+    
+    private var currentWindowSize: CGSize = .zero
+    
+    func show(triggeredByLeftStick: Bool) {
+        guard !isVisible else { return }
+        isVisible = true
+        self.triggeredByLeftStick = triggeredByLeftStick
+        
+        let configManager = ConfigManager.shared
+        // 找到当前配置的索引
+        selectedIndex = configManager.configs.firstIndex(where: { $0.id == configManager.currentConfig.id }) ?? 0
+        
+        // 获取鼠标所在的屏幕（多显示器支持）
+        let mouseLocation = NSEvent.mouseLocation
+        var targetScreen: NSScreen = NSScreen.main ?? NSScreen.screens.first!
+        for s in NSScreen.screens {
+            if s.frame.contains(mouseLocation) {
+                targetScreen = s
+                break
+            }
+        }
+        let screen = targetScreen
+        
+        // 计算窗口大小为屏幕的 80%
+        let screenFrame = screen.visibleFrame
+        let windowWidth = screenFrame.width * 0.80
+        let windowHeight = screenFrame.height * 0.80
+        currentWindowSize = CGSize(width: windowWidth, height: windowHeight)
+        
+        // 创建窗口
+        let windowFrame = NSRect(
+            x: screen.frame.midX - windowWidth / 2,
+            y: screen.frame.midY - windowHeight / 2,
+            width: windowWidth,
+            height: windowHeight
+        )
+        
+        window = NSWindow(
+            contentRect: windowFrame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        
+        guard let window = window else { return }
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.level = .screenSaver  // 更高的层级确保显示在最前面
+        window.hasShadow = true
+        window.ignoresMouseEvents = true
+        
+        // 创建 SwiftUI 视图，传入窗口尺寸
+        let wheelView = ProfileWheelView(
+            configManager: configManager,
+            selectedIndex: selectedIndex,
+            windowSize: currentWindowSize
+        )
+        
+        // 创建 hosting view 并设置 Auto Layout
+        let hosting = NSHostingView(rootView: wheelView)
+        hosting.translatesAutoresizingMaskIntoConstraints = false
+        
+        window.contentView = hosting
+        
+        // 使用 Auto Layout 让 hosting view 填满窗口
+        if let contentView = window.contentView {
+            NSLayoutConstraint.activate([
+                hosting.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+                hosting.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+                hosting.topAnchor.constraint(equalTo: contentView.topAnchor),
+                hosting.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            ])
+        }
+        
+        hostingView = hosting
+        window.orderFront(nil)
+    }
+    
+    func updateSelection(stickX: Float, stickY: Float) {
+        let configManager = ConfigManager.shared
+        let deadZone: Float = 0.3
+        
+        // 如果摇杆在死区内，不更新选择
+        let magnitude = sqrt(stickX * stickX + stickY * stickY)
+        if magnitude < deadZone {
+            return  // 保持当前选择
+        }
+        
+        // 计算摇杆角度
+        // atan2(x, -y) 让上方为0，顺时针增加
+        // stickY 在游戏手柄中：上=-1，下=+1
+        // stickX：左=-1，右=+1
+        var angle = atan2(Double(stickX), Double(-stickY))
+        if angle < 0 { angle += 2 * .pi }  // 转换为 0-2π 范围
+        
+        // 根据角度计算选中的索引
+        let total = configManager.configs.count
+        if total > 0 {
+            let segmentSize = (2 * .pi) / Double(total)
+            // 加上半个扇形大小来让选择落在扇形中心
+            selectedIndex = Int((angle + segmentSize / 2).truncatingRemainder(dividingBy: 2 * .pi) / segmentSize) % total
+        }
+        
+        updateView()
+    }
+    
+    func hide() -> ControllerConfig? {
+        guard isVisible else { return nil }
+        isVisible = false
+        
+        window?.orderOut(nil)
+        window = nil
+        hostingView = nil
+        
+        // 返回选中的配置
+        let configManager = ConfigManager.shared
+        if selectedIndex >= 0 && selectedIndex < configManager.configs.count {
+            return configManager.configs[selectedIndex]
+        }
+        return nil
+    }
+    
+    private func updateView() {
+        let wheelView = ProfileWheelView(
+            configManager: ConfigManager.shared,
+            selectedIndex: selectedIndex,
+            windowSize: currentWindowSize
+        )
+        hostingView?.rootView = wheelView
+    }
+}
+
+// MARK: - Profile 管理视图
+
+@MainActor
+struct ProfileManagerView: View {
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var l10n: LocalizationManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var editingProfileId: UUID?
+    @State private var editingName: String = ""
+    @State private var showingNewProfileAlert = false
+    @State private var newProfileName = ""
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 标题
+            HStack {
+                Text(l10n.localized("profiles"))
+                    .font(.headline)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            // Profile 列表
+            List {
+                ForEach(configManager.configs) { config in
+                    HStack {
+                        if editingProfileId == config.id {
+                            TextField("", text: $editingName, onCommit: {
+                                saveRename(config)
+                            })
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 150)
+                            
+                            Button(action: { saveRename(config) }) {
+                                Image(systemName: "checkmark")
+                            }
+                            .buttonStyle(.borderless)
+                            
+                            Button(action: { editingProfileId = nil }) {
+                                Image(systemName: "xmark")
+                            }
+                            .buttonStyle(.borderless)
+                        } else {
+                            Image(systemName: config.id == configManager.currentConfig.id ? "checkmark.circle.fill" : "circle")
+                                .foregroundColor(config.id == configManager.currentConfig.id ? .green : .secondary)
+                            
+                            Text(config.name)
+                                .fontWeight(config.id == configManager.currentConfig.id ? .semibold : .regular)
+                            
+                            if config.id == configManager.currentConfig.id {
+                                Text("(\(l10n.localized("current")))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // 重命名按钮
+                            Button(action: {
+                                editingProfileId = config.id
+                                editingName = config.name
+                            }) {
+                                Image(systemName: "pencil")
+                            }
+                            .buttonStyle(.borderless)
+                            
+                            // 复制按钮
+                            Button(action: {
+                                let _ = configManager.duplicateConfig(config)
+                            }) {
+                                Image(systemName: "doc.on.doc")
+                            }
+                            .buttonStyle(.borderless)
+                            
+                            // 删除按钮（至少保留一个）
+                            Button(action: {
+                                if configManager.configs.count > 1 {
+                                    configManager.deleteConfig(config)
+                                }
+                            }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(configManager.configs.count > 1 ? .red : .gray)
+                            }
+                            .buttonStyle(.borderless)
+                            .disabled(configManager.configs.count <= 1)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        if editingProfileId == nil {
+                            configManager.selectConfig(config)
+                        }
+                    }
+                }
+            }
+            .listStyle(.inset)
+            
+            Divider()
+            
+            // 底部按钮
+            HStack {
+                Button(action: { showingNewProfileAlert = true }) {
+                    Label(l10n.localized("newProfile"), systemImage: "plus")
+                }
+                .buttonStyle(.bordered)
+                
+                Spacer()
+                
+                Text(l10n.localized("wheelHint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+        }
+        .frame(width: 400, height: 350)
+        .alert(l10n.localized("newProfile"), isPresented: $showingNewProfileAlert) {
+            TextField(l10n.localized("profileName"), text: $newProfileName)
+            Button(l10n.localized("cancel"), role: .cancel) { newProfileName = "" }
+            Button(l10n.localized("ok")) {
+                if !newProfileName.isEmpty {
+                    let newConfig = configManager.createNewConfig(name: newProfileName)
+                    configManager.selectConfig(newConfig)
+                    newProfileName = ""
+                }
+            }
+        }
+    }
+    
+    private func saveRename(_ config: ControllerConfig) {
+        if !editingName.isEmpty {
+            var updated = config
+            updated.name = editingName
+            configManager.updateConfig(updated)
+        }
+        editingProfileId = nil
+    }
+}
+
 // MARK: - 键位编辑器
 
+@MainActor
 struct KeymapEditorView: View {
     let button: ControllerButton
     @ObservedObject var configManager: ConfigManager
@@ -1178,6 +2223,18 @@ struct KeymapEditorView: View {
         // 功能键
         case f1 = "F1", f2 = "F2", f3 = "F3", f4 = "F4", f5 = "F5", f6 = "F6"
         case f7 = "F7", f8 = "F8", f9 = "F9", f10 = "F10", f11 = "F11", f12 = "F12"
+        // 符号键
+        case leftBracket = "["
+        case rightBracket = "]"
+        case semicolon = ";"
+        case quote = "'"
+        case comma = ","
+        case period = "."
+        case slash = "/"
+        case backslash = "\\"
+        case equal = "="
+        case minus = "-"
+        case grave = "`"
         
         var keyCode: Int {
             switch self {
@@ -1239,6 +2296,18 @@ struct KeymapEditorView: View {
             case .f10: return 0x6D
             case .f11: return 0x67
             case .f12: return 0x6F
+            // 符号键
+            case .leftBracket: return 0x21
+            case .rightBracket: return 0x1E
+            case .semicolon: return 0x29
+            case .quote: return 0x27
+            case .comma: return 0x2B
+            case .period: return 0x2F
+            case .slash: return 0x2C
+            case .backslash: return 0x2A
+            case .equal: return 0x18
+            case .minus: return 0x1B
+            case .grave: return 0x32
             }
         }
         
@@ -1256,8 +2325,12 @@ struct KeymapEditorView: View {
             case .rightArrow: return "→"
             case .f1, .f2, .f3, .f4, .f5, .f6, .f7, .f8, .f9, .f10, .f11, .f12:
                 return rawValue  // F1-F12 直接返回
-            default: return rawValue  // 字母和数字直接返回
+            default: return rawValue  // 字母、数字和符号直接返回
             }
+        }
+        
+        static func from(keyCode: Int) -> KeyOption? {
+            return KeyOption.allCases.first { $0.keyCode == keyCode }
         }
     }
     
@@ -1305,6 +2378,7 @@ struct KeymapEditorView: View {
                         Text(localizedTitle("mouseClick")).tag(ActionType.mouseClick)
                         Text(localizedTitle("mouseDrag")).tag(ActionType.mouseDrag)
                         Text(localizedTitle("shortcut")).tag(ActionType.shortcut)
+                        Text(localizedTitle("profileWheel")).tag(ActionType.profileWheel)
                         Text(localizedTitle("noAction")).tag(ActionType.none)
                     }
                     .pickerStyle(.segmented)
@@ -1349,14 +2423,10 @@ struct KeymapEditorView: View {
                     }
                     GridRow {
                         Text(localizedTitle("key"))
-                        Picker("", selection: $selectedKey) {
-                            ForEach(KeyOption.allCases, id: \.self) { key in
-                                Text(key.rawValue).tag(key)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        KeyCaptureField(selectedKey: $selectedKey)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
-                case .mouseDrag, .none, .command, .text, .mouseMove, .scroll:
+                case .mouseDrag, .profileWheel, .none, .command, .text, .mouseMove, .scroll:
                     EmptyView()
                 }
                 
@@ -1411,6 +2481,8 @@ struct KeymapEditorView: View {
             let mods = modifiers.displayString
             let key = selectedKey == .none ? "" : selectedKey.displayName
             return mods.isEmpty ? key : "\(mods)\(key)"
+        case .profileWheel:
+            return localizedTitle("profileWheel")
         default:
             return localizedTitle("noAction")
         }
@@ -1429,6 +2501,8 @@ struct KeymapEditorView: View {
             } else {
                 action = Action(type: .shortcut, modifiers: modifiers, keyCode: selectedKey.keyCode, keyDisplay: selectedKey.displayName)
             }
+        case .profileWheel:
+            action = .profileWheel
         default:
             action = .none
         }
@@ -1468,6 +2542,12 @@ struct KeymapEditorView: View {
                 .japanese: "ショートカット",
                 .simplifiedChinese: "快捷键",
                 .traditionalChinese: "快捷鍵"
+            ],
+            "profileWheel": [
+                .english: "Profile",
+                .japanese: "プロファイル",
+                .simplifiedChinese: "配置轮盘",
+                .traditionalChinese: "配置輪盤"
             ],
             "noAction": [
                 .english: "None",
@@ -1536,6 +2616,7 @@ struct KeymapEditorView: View {
 
 // MARK: - 组合键列表视图
 
+@MainActor
 struct ChordListView: View {
     @ObservedObject var configManager: ConfigManager
     @ObservedObject var l10n: LocalizationManager
@@ -1628,6 +2709,7 @@ struct ChordListView: View {
 
 // MARK: - 组合键行视图
 
+@MainActor
 struct ChordRowView: View {
     let chord: ButtonChord
     let action: Action
@@ -1740,6 +2822,7 @@ enum ChordEditorMode {
     }
 }
 
+@MainActor
 struct UnifiedChordEditorView: View {
     let mode: ChordEditorMode
     @ObservedObject var configManager: ConfigManager
@@ -1884,12 +2967,8 @@ struct UnifiedChordEditorView: View {
                         Text(localizedTitle("macKey"))
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        Picker("", selection: $selectedKey) {
-                            ForEach(KeymapEditorView.KeyOption.allCases, id: \.self) { key in
-                                Text(key.rawValue).tag(key)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        KeyCaptureField(selectedKey: $selectedKey)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                     
                     GridRow {
@@ -2109,5 +3188,62 @@ struct ModifierToggle: View {
                 .cornerRadius(6)
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - 按键捕获字段
+
+struct KeyCaptureField: View {
+    @Binding var selectedKey: KeymapEditorView.KeyOption
+    @State private var isCapturing = false
+    @State private var eventMonitor: Any?
+    
+    var body: some View {
+        Button(action: { startCapturing() }) {
+            HStack {
+                Text(isCapturing ? "按下按键..." : (selectedKey == .none ? "点击选择按键" : selectedKey.displayName))
+                    .foregroundColor(isCapturing ? .secondary : (selectedKey == .none ? .secondary : .primary))
+                Spacer()
+                if selectedKey != .none && !isCapturing {
+                    Button(action: { selectedKey = .none }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .frame(maxWidth: .infinity)
+            .background(isCapturing ? Color.blue.opacity(0.1) : Color.gray.opacity(0.1))
+            .cornerRadius(6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(isCapturing ? Color.blue : Color.clear, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .onDisappear {
+            stopCapturing()
+        }
+    }
+    
+    private func startCapturing() {
+        isCapturing = true
+        eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if let keyOption = KeymapEditorView.KeyOption.from(keyCode: Int(event.keyCode)) {
+                selectedKey = keyOption
+            }
+            stopCapturing()
+            return nil // 消费事件
+        }
+    }
+    
+    private func stopCapturing() {
+        isCapturing = false
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
+        }
     }
 }

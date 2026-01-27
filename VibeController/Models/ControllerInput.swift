@@ -32,8 +32,8 @@ enum ControllerButton: String, Codable, CaseIterable, Hashable, Identifiable {
         case .rightBumper: return "RB"
         case .leftTrigger: return "LT"
         case .rightTrigger: return "RT"
-        case .leftStickButton: return "L3"
-        case .rightStickButton: return "R3"
+        case .leftStickButton: return "LS ↓"  // Left Stick Press
+        case .rightStickButton: return "RS ↓" // Right Stick Press
         case .dpadUp: return "D-Pad ↑"
         case .dpadDown: return "D-Pad ↓"
         case .dpadLeft: return "D-Pad ←"
@@ -44,6 +44,7 @@ enum ControllerButton: String, Codable, CaseIterable, Hashable, Identifiable {
         }
     }
     
+    /// 简短名称，用于组合键显示
     var shortName: String {
         switch self {
         case .buttonA: return "A"
@@ -54,8 +55,8 @@ enum ControllerButton: String, Codable, CaseIterable, Hashable, Identifiable {
         case .rightBumper: return "RB"
         case .leftTrigger: return "LT"
         case .rightTrigger: return "RT"
-        case .leftStickButton: return "L3"
-        case .rightStickButton: return "R3"
+        case .leftStickButton: return "LS↓"
+        case .rightStickButton: return "RS↓"
         case .dpadUp: return "↑"
         case .dpadDown: return "↓"
         case .dpadLeft: return "←"
@@ -63,6 +64,29 @@ enum ControllerButton: String, Codable, CaseIterable, Hashable, Identifiable {
         case .startButton: return "☰"
         case .backButton: return "⧉"
         case .xboxButton: return "ⓧ"
+        }
+    }
+    
+    /// 详细描述，用于帮助文本
+    var detailedName: String {
+        switch self {
+        case .buttonA: return "A Button"
+        case .buttonB: return "B Button"
+        case .buttonX: return "X Button"
+        case .buttonY: return "Y Button"
+        case .leftBumper: return "Left Bumper (LB)"
+        case .rightBumper: return "Right Bumper (RB)"
+        case .leftTrigger: return "Left Trigger (LT)"
+        case .rightTrigger: return "Right Trigger (RT)"
+        case .leftStickButton: return "Left Stick Press (LS↓)"
+        case .rightStickButton: return "Right Stick Press (RS↓)"
+        case .dpadUp: return "D-Pad Up"
+        case .dpadDown: return "D-Pad Down"
+        case .dpadLeft: return "D-Pad Left"
+        case .dpadRight: return "D-Pad Right"
+        case .startButton: return "Start / Menu"
+        case .backButton: return "Back / View"
+        case .xboxButton: return "Xbox Guide"
         }
     }
 }

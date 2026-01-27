@@ -51,6 +51,10 @@ class HIDControllerManager: ObservableObject {
     private var clickCount: [Int: Int64] = [:]     // button -> 当前连击次数
     private let doubleClickInterval: TimeInterval = 0.5  // 双击判定间隔（秒）
     
+    // Profile 轮盘状态
+    @Published var profileWheelActive = false
+    private var profileWheelTriggerButton: UInt32? = nil  // 记录哪个按钮触发了轮盘
+    
     private init() {}
     
     // MARK: - 启动/停止
@@ -135,6 +139,20 @@ class HIDControllerManager: ObservableObject {
             DispatchQueue.main.async {
                 if pressed { self.pressedButtons.insert(buttonName) }
                 else { self.pressedButtons.remove(buttonName) }
+            }
+            
+            // 检查是否是轮盘释放
+            if !pressed && wasPressed && profileWheelTriggerButton == usage {
+                print("🔘 轮盘按钮释放 → 确认 Profile 选择")
+                profileWheelTriggerButton = nil
+                Task { @MainActor in
+                    self.profileWheelActive = false
+                    if let selectedConfig = ProfileWheelWindowController.shared.hide() {
+                        ConfigManager.shared.selectConfig(selectedConfig)
+                        print("✅ 切换到 Profile: \(selectedConfig.name)")
+                    }
+                }
+                return
             }
             
             if pressed && !wasPressed { handleButtonPress(usage) }
@@ -246,7 +264,19 @@ class HIDControllerManager: ObservableObject {
         let action = runOnMain { ConfigManager.shared.currentConfig.action(for: btn) }
         guard action.type != .none else { return }
         
-        print("🔘 \(btn.displayName) → \(action.displayName)")
+        // Profile 轮盘 - 特殊处理（需要在按钮释放时确认）
+        if action.type == .profileWheel {
+            let isLeftStick = (button == 14)  // 14 = LS↓, 15 = RS↓
+            print("🔘 \(btn.displayName) → 打开 Profile 轮盘 (用\(isLeftStick ? "右" : "左")摇杆选择)")
+            profileWheelTriggerButton = button
+            Task { @MainActor in
+                self.profileWheelActive = true
+                ProfileWheelWindowController.shared.show(triggeredByLeftStick: isLeftStick)
+            }
+            return
+        }
+        
+        print("🔘 \(btn.displayName): \(action.displayName)")
         executeAction(action)
     }
     
@@ -289,7 +319,7 @@ class HIDControllerManager: ObservableObject {
         let action = runOnMain { ConfigManager.shared.currentConfig.action(for: button) }
         guard action.type != .none else { return }
         
-        print("🔘 \(button.displayName) → \(action.displayName)")
+        print("🔘 \(button.displayName): \(action.displayName)")
         executeAction(action)
     }
     
@@ -337,7 +367,7 @@ class HIDControllerManager: ObservableObject {
         // 按修饰键数量从多到少排序（更精确的组合优先）
         if let (chord, action) = matchingChords.sorted(by: { $0.0.modifiers.count > $1.0.modifiers.count }).first,
            action.type != .none {
-            print("🔘 组合键: \(chord.displayName) → \(action.displayName)")
+            print("🔘 组合键: \(chord.displayName): \(action.displayName)")
             executeAction(action)
             return true
         }
@@ -388,8 +418,8 @@ class HIDControllerManager: ObservableObject {
             down.setIntegerValueField(.mouseEventClickState, value: count)
             up.setIntegerValueField(.mouseEventButtonNumber, value: 2)
             up.setIntegerValueField(.mouseEventClickState, value: count)
-            down.post(tap: .cghidEventTap)
-            up.post(tap: .cghidEventTap)
+            down.post(tap: .cgSessionEventTap)
+            up.post(tap: .cgSessionEventTap)
             print("   中键\(clickName)成功")
         }
     }
@@ -403,8 +433,8 @@ class HIDControllerManager: ObservableObject {
         case 7: return "LB"
         case 8: return "RB"
         case 12: return "Start"
-        case 14: return "L3"
-        case 15: return "R3"
+        case 14: return "LS↓"  // Left Stick Press
+        case 15: return "RS↓"  // Right Stick Press
         default: return "Button\(usage)"
         }
     }
@@ -423,14 +453,26 @@ class HIDControllerManager: ObservableObject {
         
         let lx = applyDeadZone(leftStickX), ly = applyDeadZone(leftStickY)
         let leftActive = lx != 0 || ly != 0
-        if leftActive {
-            moveMouse(dx: CGFloat(lx) * cursorSpeed, dy: CGFloat(ly) * cursorSpeed)
-        }
-        
         let rx = applyDeadZone(rightStickX), ry = applyDeadZone(rightStickY)
         let rightActive = rx != 0 || ry != 0
-        if rightActive {
-            scroll(dx: CGFloat(rx) * scrollSpeed, dy: CGFloat(ry) * scrollSpeed)
+        
+        // 如果 Profile 轮盘激活，用另一个摇杆选择 Profile
+        if profileWheelActive {
+            Task { @MainActor in
+                // 根据触发按钮选择用哪个摇杆
+                // 如果是左摇杆触发的，用右摇杆选择；反之亦然
+                let useRightStick = ProfileWheelWindowController.shared.triggeredByLeftStick
+                let stickX = useRightStick ? self.rightStickX : self.leftStickX
+                let stickY = useRightStick ? self.rightStickY : self.leftStickY
+                ProfileWheelWindowController.shared.updateSelection(stickX: stickX, stickY: stickY)
+            }
+        } else {
+            if leftActive {
+                moveMouse(dx: CGFloat(lx) * cursorSpeed, dy: CGFloat(ly) * cursorSpeed)
+            }
+            if rightActive {
+                scroll(dx: CGFloat(rx) * scrollSpeed, dy: CGFloat(ry) * scrollSpeed)
+            }
         }
         
         DispatchQueue.main.async {
@@ -549,16 +591,26 @@ class HIDControllerManager: ObservableObject {
             return false
         }
         event.setIntegerValueField(.mouseEventClickState, value: clickCount)
-        event.post(tap: .cghidEventTap)
+        // 使用 cgSessionEventTap 以确保窗口能被激活
+        event.post(tap: .cgSessionEventTap)
         return true
     }
     
     private func pressKey(_ code: Int, modifiers: CGEventFlags = []) {
+        print("   pressKey: code=\(code), modifiers=\(modifiers.rawValue)")
         if let down = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true) {
-            down.flags = modifiers; down.post(tap: .cghidEventTap)
+            down.flags = modifiers
+            down.post(tap: .cghidEventTap)
+            print("   ✓ key down posted")
+        } else {
+            print("   ✗ failed to create key down event")
         }
         if let up = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false) {
-            up.flags = modifiers; up.post(tap: .cghidEventTap)
+            up.flags = modifiers
+            up.post(tap: .cghidEventTap)
+            print("   ✓ key up posted")
+        } else {
+            print("   ✗ failed to create key up event")
         }
     }
     

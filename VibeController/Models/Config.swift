@@ -152,7 +152,7 @@ extension ControllerConfig {
         mappings[.rightTrigger] = .shortcut(modifiers: [], keyCode: KeyCodes.returnKey, display: "↵")
         
         // 摇杆按下
-        mappings[.leftStickButton] = .shortcut(modifiers: [], keyCode: KeyCodes.returnKey, display: "↵")
+        mappings[.leftStickButton] = .profileWheel  // LS↓：配置轮盘
         mappings[.rightStickButton] = .shortcut(modifiers: [], keyCode: KeyCodes.escape, display: "Esc")
         
         // 十字键

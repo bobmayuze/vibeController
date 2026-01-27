@@ -7,6 +7,7 @@ enum ActionType: String, Codable, CaseIterable {
     case mouseClick = "click"
     case mouseDrag = "drag"
     case shortcut = "shortcut"
+    case profileWheel = "profileWheel"
     case command = "command"
     case text = "text"
     case mouseMove = "mouseMove"
@@ -18,6 +19,7 @@ enum ActionType: String, Codable, CaseIterable {
         case .mouseClick: return "Click"
         case .mouseDrag: return "Drag"
         case .shortcut: return "Shortcut"
+        case .profileWheel: return "Profile Wheel"
         case .command: return "Command"
         case .text: return "Text"
         case .mouseMove: return "Mouse Move"
@@ -87,6 +89,7 @@ struct Action: Codable, Equatable, Hashable {
     static let leftClick = Action(type: .mouseClick, mouseButton: .left)
     static let rightClick = Action(type: .mouseClick, mouseButton: .right)
     static let drag = Action(type: .mouseDrag)
+    static let profileWheel = Action(type: .profileWheel)
     static let none = Action(type: .none)
     
     static func shortcut(modifiers: ModifierKeys, keyCode: Int, display: String) -> Action {
@@ -111,6 +114,8 @@ struct Action: Codable, Equatable, Hashable {
             let mods = modifiers?.displayString ?? ""
             let key = keyDisplay ?? ""
             return "\(mods)\(key)"
+        case .profileWheel:
+            return "Profile"
         case .command:
             return commandString ?? "Cmd"
         case .text:

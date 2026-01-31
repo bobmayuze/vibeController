@@ -22,12 +22,37 @@ class ConfigManager: ObservableObject {
     @Published var configs: [ControllerConfig] = []
     @Published var currentConfig: ControllerConfig
     @Published var buttonPositions: [String: CGPoint] = [:]
+    @Published var autoSwitchEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(autoSwitchEnabled, forKey: autoSwitchKey)
+        }
+    }
+    @Published var defaultProfileId: UUID? {
+        didSet {
+            if let id = defaultProfileId {
+                UserDefaults.standard.set(id.uuidString, forKey: defaultProfileKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: defaultProfileKey)
+            }
+        }
+    }
     
     private let configsKey = "SavedConfigs"
     private let currentConfigIdKey = "CurrentConfigId"
     private let buttonPositionsKey = "ButtonPositions"
+    private let autoSwitchKey = "AutoSwitchEnabled"
+    private let defaultProfileKey = "DefaultProfileId"
     
     private init() {
+        // 加载 auto-switch 设置
+        autoSwitchEnabled = UserDefaults.standard.bool(forKey: autoSwitchKey)
+        
+        // 加载 default profile ID
+        if let idString = UserDefaults.standard.string(forKey: defaultProfileKey),
+           let id = UUID(uuidString: idString) {
+            defaultProfileId = id
+        }
+        
         // 先创建一个临时默认配置，loadConfigs 会覆盖它
         currentConfig = .default
         loadConfigs()
@@ -218,11 +243,13 @@ class ConfigManager: ObservableObject {
     
     func createNewConfig(name: String, basedOn: ControllerConfig? = nil) -> ControllerConfig {
         let base = basedOn ?? .default
+        // 注意：不复制 associatedApps，因为一个 app 只能关联一个 Profile
         let newConfig = ControllerConfig(
             name: name,
             mappings: base.mappings,
             chordMappings: base.chordMappings,
-            settings: base.settings
+            settings: base.settings,
+            associatedApps: []
         )
         addConfig(newConfig)
         return newConfig
@@ -230,5 +257,91 @@ class ConfigManager: ObservableObject {
     
     func duplicateConfig(_ config: ControllerConfig) -> ControllerConfig {
         return createNewConfig(name: "\(config.name) Copy", basedOn: config)
+    }
+    
+    // MARK: - App 关联管理
+    
+    /// 根据 Bundle ID 查找关联的 Profile
+    func configForApp(_ bundleId: String) -> ControllerConfig? {
+        return configs.first { $0.associatedApps.contains(bundleId) }
+    }
+    
+    /// 检查 app 是否已被关联到其他 Profile
+    func isAppAssociated(_ bundleId: String, excludingConfig: ControllerConfig? = nil) -> Bool {
+        return configs.contains { config in
+            if let excluding = excludingConfig, config.id == excluding.id {
+                return false
+            }
+            return config.associatedApps.contains(bundleId)
+        }
+    }
+    
+    /// 获取 app 当前关联的 Profile 名称
+    func profileNameForApp(_ bundleId: String) -> String? {
+        return configForApp(bundleId)?.name
+    }
+    
+    /// 添加 app 到 Profile
+    func addApp(_ bundleId: String, to config: ControllerConfig) {
+        guard !isAppAssociated(bundleId) else { return }
+        if let index = configs.firstIndex(where: { $0.id == config.id }) {
+            configs[index].associatedApps.append(bundleId)
+            if currentConfig.id == config.id {
+                currentConfig = configs[index]
+            }
+            saveConfigs()
+        }
+    }
+    
+    /// 从 Profile 移除 app
+    func removeApp(_ bundleId: String, from config: ControllerConfig) {
+        if let index = configs.firstIndex(where: { $0.id == config.id }) {
+            configs[index].associatedApps.removeAll { $0 == bundleId }
+            if currentConfig.id == config.id {
+                currentConfig = configs[index]
+            }
+            saveConfigs()
+        }
+    }
+    
+    /// 切换到指定 app 对应的 Profile（用于自动切换）
+    /// 返回切换到的配置（如果发生了切换）
+    func switchToProfileForApp(_ bundleId: String) -> ControllerConfig? {
+        guard autoSwitchEnabled else { return nil }
+        
+        // 查找 app 关联的 profile
+        if let targetConfig = configForApp(bundleId) {
+            guard targetConfig.id != currentConfig.id else { return nil }
+            selectConfig(targetConfig)
+            return targetConfig
+        }
+        
+        // 没有匹配的 profile，切换到 default profile
+        if let defaultId = defaultProfileId,
+           let defaultConfig = configs.first(where: { $0.id == defaultId }) {
+            guard defaultConfig.id != currentConfig.id else { return nil }
+            selectConfig(defaultConfig)
+            return defaultConfig
+        }
+        
+        return nil
+    }
+    
+    // MARK: - Default Profile 管理
+    
+    /// 获取 default profile
+    var defaultProfile: ControllerConfig? {
+        guard let id = defaultProfileId else { return nil }
+        return configs.first { $0.id == id }
+    }
+    
+    /// 设置 default profile
+    func setDefaultProfile(_ config: ControllerConfig?) {
+        defaultProfileId = config?.id
+    }
+    
+    /// 检查是否是 default profile
+    func isDefaultProfile(_ config: ControllerConfig) -> Bool {
+        return config.id == defaultProfileId
     }
 }

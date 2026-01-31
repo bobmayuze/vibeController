@@ -131,7 +131,7 @@ struct ControllerInfo: Identifiable {
 
 struct ButtonChord: Hashable, Codable, Identifiable {
     var modifiers: Set<ControllerButton>  // 修饰按钮集合 (如 LT+LB)
-    var button: ControllerButton          // 主按钮 (如 D-pad Up)
+    var button: ControllerButton?         // 主按钮 (如 D-pad Up)，可为空表示纯修饰键组合
     
     // 兼容旧版单修饰键的初始化
     init(modifier: ControllerButton, button: ControllerButton) {
@@ -139,19 +139,27 @@ struct ButtonChord: Hashable, Codable, Identifiable {
         self.button = button
     }
     
-    init(modifiers: Set<ControllerButton>, button: ControllerButton) {
+    init(modifiers: Set<ControllerButton>, button: ControllerButton?) {
         self.modifiers = modifiers
         self.button = button
     }
     
     var id: String {
         let sortedModifiers = modifiers.map { $0.rawValue }.sorted().joined(separator: "+")
-        return "\(sortedModifiers)+\(button.rawValue)"
+        if let button = button {
+            return "\(sortedModifiers)+\(button.rawValue)"
+        } else {
+            return sortedModifiers
+        }
     }
     
     var displayName: String {
         let modifierNames = modifiers.sorted { $0.rawValue < $1.rawValue }.map { $0.shortName }.joined(separator: " + ")
-        return "\(modifierNames) + \(button.shortName)"
+        if let button = button {
+            return "\(modifierNames) + \(button.shortName)"
+        } else {
+            return modifierNames
+        }
     }
     
     // 兼容旧代码的 modifier 属性（返回第一个修饰键）
@@ -159,12 +167,17 @@ struct ButtonChord: Hashable, Codable, Identifiable {
         modifiers.first ?? .leftTrigger
     }
     
+    /// 是否是纯修饰键组合（不需要按额外按钮）
+    var isModifierOnly: Bool {
+        button == nil
+    }
+    
     // 预设的修饰按钮（可作为组合键的修饰器）
     static let modifierButtons: [ControllerButton] = [
         .leftTrigger, .rightTrigger, .leftBumper, .rightBumper
     ]
     
-    // 可被修饰的按钮
+    // 可被修饰的按钮（包含 none 选项）
     static let modifiableButtons: [ControllerButton] = [
         .dpadUp, .dpadDown, .dpadLeft, .dpadRight,
         .buttonA, .buttonB, .buttonX, .buttonY

@@ -8,13 +8,15 @@ struct ControllerConfig: Codable, Identifiable {
     var mappings: [ControllerButton: Action]
     var chordMappings: [ButtonChord: Action]  // 组合键映射
     var settings: ControllerSettings
+    var associatedApps: [String]  // 关联的应用 Bundle ID 列表
     
-    init(id: UUID = UUID(), name: String, mappings: [ControllerButton: Action], chordMappings: [ButtonChord: Action] = [:], settings: ControllerSettings = .default) {
+    init(id: UUID = UUID(), name: String, mappings: [ControllerButton: Action], chordMappings: [ButtonChord: Action] = [:], settings: ControllerSettings = .default, associatedApps: [String] = []) {
         self.id = id
         self.name = name
         self.mappings = mappings
         self.chordMappings = chordMappings
         self.settings = settings
+        self.associatedApps = associatedApps
     }
     
     func action(for button: ControllerButton) -> Action {
@@ -40,7 +42,7 @@ struct ControllerConfig: Codable, Identifiable {
     // MARK: - Codable
     
     enum CodingKeys: String, CodingKey {
-        case id, name, mappings, chordMappings, settings
+        case id, name, mappings, chordMappings, settings, associatedApps
     }
     
     init(from decoder: Decoder) throws {
@@ -48,6 +50,7 @@ struct ControllerConfig: Codable, Identifiable {
         id = try container.decode(UUID.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         settings = try container.decode(ControllerSettings.self, forKey: .settings)
+        associatedApps = try container.decodeIfPresent([String].self, forKey: .associatedApps) ?? []
         
         // 解码 mappings (String -> ControllerButton)
         let stringMappings = try container.decode([String: Action].self, forKey: .mappings)
@@ -64,13 +67,25 @@ struct ControllerConfig: Codable, Identifiable {
             var chordButtonMappings: [ButtonChord: Action] = [:]
             for (key, value) in chordStringMappings {
                 let parts = key.split(separator: "+").map { String($0) }
-                guard parts.count >= 2 else { continue }
+                guard !parts.isEmpty else { continue }
                 
-                // 最后一个是主按钮，前面的都是修饰键
-                let buttonRawValue = parts.last!
-                let modifierRawValues = parts.dropLast()
+                // 尝试解析最后一个部分是否是可修饰的按钮
+                let lastPart = parts.last!
+                let mainButton = ControllerButton(rawValue: lastPart)
+                let isMainButton = mainButton != nil && ButtonChord.modifiableButtons.contains(mainButton!)
                 
-                guard let button = ControllerButton(rawValue: buttonRawValue) else { continue }
+                let modifierRawValues: [String]
+                let button: ControllerButton?
+                
+                if isMainButton && parts.count >= 2 {
+                    // 传统格式：修饰键+主按钮
+                    modifierRawValues = Array(parts.dropLast())
+                    button = mainButton
+                } else {
+                    // 纯修饰键组合（无主按钮）
+                    modifierRawValues = parts.map { String($0) }
+                    button = nil
+                }
                 
                 var modifiers: Set<ControllerButton> = []
                 var validModifiers = true
@@ -98,6 +113,7 @@ struct ControllerConfig: Codable, Identifiable {
         try container.encode(id, forKey: .id)
         try container.encode(name, forKey: .name)
         try container.encode(settings, forKey: .settings)
+        try container.encode(associatedApps, forKey: .associatedApps)
         
         // 编码 mappings (ControllerButton -> String)
         var stringMappings: [String: Action] = [:]

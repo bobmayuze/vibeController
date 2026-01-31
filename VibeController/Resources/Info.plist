@@ -18,5 +18,7 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Vibe Controller needs to send keyboard shortcuts to trigger system functions like Mission Control and App Exposé.</string>
 </dict>
 </plist>

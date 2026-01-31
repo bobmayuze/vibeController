@@ -55,6 +55,9 @@ class HIDControllerManager: ObservableObject {
     @Published var profileWheelActive = false
     private var profileWheelTriggerButton: UInt32? = nil  // 记录哪个按钮触发了轮盘
     
+    // App Exposé 模式状态（全局，跨所有 Profile）
+    @Published var isAppExposeActive = false
+    
     private init() {}
     
     // MARK: - 启动/停止
@@ -189,8 +192,13 @@ class HIDControllerManager: ObservableObject {
                 if normalized <= 0.5 && wasActive {
                     if isDragging { endDrag() }
                 }
-                // LT 按下时：执行配置的动作
+                // LT 按下时：先检查纯修饰键组合，再执行配置的动作
                 else if normalized > 0.5 && !wasActive {
+                    // 检查是否完成了纯修饰键组合
+                    if tryExecuteModifierOnlyChord() {
+                        return
+                    }
+                    
                     let action = runOnMain { ConfigManager.shared.currentConfig.action(for: .leftTrigger) }
                     if action.type == .mouseDrag {
                         startDrag()
@@ -205,8 +213,13 @@ class HIDControllerManager: ObservableObject {
                 rightTrigger = normalized
                 DispatchQueue.main.async { self.rtActive = normalized > 0.5 }
                 
-                // RT 按下时执行配置的动作
+                // RT 按下时：先检查纯修饰键组合，再执行配置的动作
                 if normalized > 0.5 && !wasActive {
+                    // 检查是否完成了纯修饰键组合
+                    if tryExecuteModifierOnlyChord() {
+                        return
+                    }
+                    
                     let action = runOnMain { ConfigManager.shared.currentConfig.action(for: .rightTrigger) }
                     if action.type != .none {
                         print("🔘 RT → \(action.displayName)")
@@ -247,6 +260,27 @@ class HIDControllerManager: ObservableObject {
         
         guard let btn = controllerButton else { return }
         
+        // App Exposé 模式下的特殊按键映射（全局，跨所有 Profile）
+        if isAppExposeActive {
+            if btn == .buttonA {
+                print("🔘 [App Exposé] A → 选择窗口 (Enter)")
+                pressKey(36)  // Return key
+                Task { @MainActor in
+                    self.isAppExposeActive = false
+                    AppExposeOverlayController.shared.hide()
+                }
+                return
+            } else if btn == .buttonB {
+                print("🔘 [App Exposé] B → 退出 (Escape)")
+                pressKey(53)  // Escape key
+                Task { @MainActor in
+                    self.isAppExposeActive = false
+                    AppExposeOverlayController.shared.hide()
+                }
+                return
+            }
+        }
+        
         // App Switcher 模式下，LB/RB 有特殊行为
         if isAppSwitcherActive {
             if btn == .leftBumper {
@@ -258,6 +292,18 @@ class HIDControllerManager: ObservableObject {
                 pressKey(48, modifiers: .maskCommand)
                 return
             }
+        }
+        
+        // 如果是修饰键（LB/RB），检查是否完成了纯修饰键组合
+        if btn == .leftBumper || btn == .rightBumper {
+            if tryExecuteModifierOnlyChord() {
+                return
+            }
+        }
+        
+        // 检查是否有修饰键被按住，尝试执行组合键
+        if tryExecuteChord(for: btn) {
+            return  // 组合键已执行，不再执行普通动作
         }
         
         // 从配置读取动作
@@ -310,6 +356,21 @@ class HIDControllerManager: ObservableObject {
         
         guard let button = dpadButton else { return }
         
+        // App Exposé 模式下，D-Pad 直接映射为方向键（全局，跨所有 Profile）
+        if isAppExposeActive {
+            let keyCode: Int
+            switch button {
+            case .dpadUp: keyCode = 126     // Up Arrow
+            case .dpadDown: keyCode = 125  // Down Arrow
+            case .dpadLeft: keyCode = 123  // Left Arrow
+            case .dpadRight: keyCode = 124 // Right Arrow
+            default: return
+            }
+            print("🔘 [App Exposé] \(button.shortName) → 方向键")
+            pressKey(keyCode)
+            return
+        }
+        
         // 检查是否有修饰键被按住，尝试执行组合键
         if tryExecuteChord(for: button) {
             return  // 组合键已执行，不再执行普通动作
@@ -356,8 +417,9 @@ class HIDControllerManager: ObservableObject {
         // 获取所有匹配的组合键（修饰键是当前按住修饰键的子集）
         let matchingChords: [(ButtonChord, Action)] = runOnMain {
             ConfigManager.shared.currentConfig.chordMappings.compactMap { chord, action in
-                // 检查：组合键的所有修饰键都被按住，且主按钮匹配
-                if chord.modifiers.isSubset(of: pressedModifiers) && chord.button == button {
+                // 检查：组合键的所有修饰键都被按住，且主按钮匹配（只检查有主按钮的组合键）
+                if let chordButton = chord.button,
+                   chord.modifiers.isSubset(of: pressedModifiers) && chordButton == button {
                     return (chord, action)
                 }
                 return nil
@@ -368,6 +430,35 @@ class HIDControllerManager: ObservableObject {
         if let (chord, action) = matchingChords.sorted(by: { $0.0.modifiers.count > $1.0.modifiers.count }).first,
            action.type != .none {
             print("🔘 组合键: \(chord.displayName): \(action.displayName)")
+            executeAction(action)
+            return true
+        }
+        
+        return false
+    }
+    
+    /// 尝试执行纯修饰键组合（不需要按额外按钮），返回是否成功执行
+    private func tryExecuteModifierOnlyChord() -> Bool {
+        let pressedModifiers = getCurrentPressedModifiers()
+        guard !pressedModifiers.isEmpty else { return false }
+        
+        // 查找精确匹配的纯修饰键组合
+        let matchingChord: (ButtonChord, Action)? = runOnMain {
+            for (chord, action) in ConfigManager.shared.currentConfig.chordMappings {
+                // 只检查纯修饰键组合（button 为 nil）
+                if chord.isModifierOnly && chord.modifiers == pressedModifiers {
+                    return (chord, action)
+                }
+            }
+            return nil
+        }
+        
+        if let (chord, action) = matchingChord, action.type != .none {
+            // 如果正在拖拽，先结束拖拽，避免干扰系统快捷键
+            if isDragging {
+                endDrag()
+            }
+            print("🔘 纯修饰键组合: \(chord.displayName): \(action.displayName)")
             executeAction(action)
             return true
         }
@@ -598,28 +689,87 @@ class HIDControllerManager: ObservableObject {
     
     private func pressKey(_ code: Int, modifiers: CGEventFlags = []) {
         print("   pressKey: code=\(code), modifiers=\(modifiers.rawValue)")
+        
+        // 对于系统级快捷键（如 Mission Control, App Exposé），使用 AppleScript
+        // 因为 CGEvent 可能被 macOS 安全机制阻止
+        if shouldUseAppleScript(code: code, modifiers: modifiers) {
+            pressKeyViaAppleScript(code: code, modifiers: modifiers)
+            return
+        }
+        
         if let down = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true) {
             down.flags = modifiers
-            down.post(tap: .cghidEventTap)
+            down.post(tap: .cgSessionEventTap)
             print("   ✓ key down posted")
         } else {
             print("   ✗ failed to create key down event")
         }
         if let up = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false) {
             up.flags = modifiers
-            up.post(tap: .cghidEventTap)
+            up.post(tap: .cgSessionEventTap)
             print("   ✓ key up posted")
         } else {
             print("   ✗ failed to create key up event")
         }
     }
     
+    /// 判断是否应该使用 AppleScript 发送按键（用于系统级快捷键）
+    private func shouldUseAppleScript(code: Int, modifiers: CGEventFlags) -> Bool {
+        // Control + 方向键 通常是系统快捷键（Mission Control, App Exposé）
+        let arrowKeys = [123, 124, 125, 126]  // left, right, down, up
+        if modifiers.contains(.maskControl) && arrowKeys.contains(code) {
+            // 检测 App Exposé 触发 (Control + Down Arrow)
+            if code == 125 {
+                Task { @MainActor in
+                    self.isAppExposeActive = true
+                    AppExposeOverlayController.shared.show()
+                    print("🎯 App Exposé 模式已激活")
+                }
+            }
+            return true
+        }
+        return false
+    }
+    
+    /// 使用 AppleScript 发送按键
+    private func pressKeyViaAppleScript(code: Int, modifiers: CGEventFlags) {
+        var modifierString = ""
+        if modifiers.contains(.maskCommand) { modifierString += "command down, " }
+        if modifiers.contains(.maskAlternate) { modifierString += "option down, " }
+        if modifiers.contains(.maskControl) { modifierString += "control down, " }
+        if modifiers.contains(.maskShift) { modifierString += "shift down, " }
+        
+        // 移除末尾的 ", "
+        if modifierString.hasSuffix(", ") {
+            modifierString = String(modifierString.dropLast(2))
+        }
+        
+        let script: String
+        if modifierString.isEmpty {
+            script = "tell application \"System Events\" to key code \(code)"
+        } else {
+            script = "tell application \"System Events\" to key code \(code) using {\(modifierString)}"
+        }
+        
+        print("   AppleScript: \(script)")
+        
+        if let appleScript = NSAppleScript(source: script) {
+            var error: NSDictionary?
+            appleScript.executeAndReturnError(&error)
+            if let error = error {
+                print("   ✗ AppleScript error: \(error)")
+            } else {
+                print("   ✓ AppleScript executed")
+            }
+        }
+    }
+    
     private func keyDown(_ code: Int) {
-        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true)?.post(tap: .cghidEventTap)
+        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true)?.post(tap: .cgSessionEventTap)
     }
     
     private func keyUp(_ code: Int) {
-        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false)?.post(tap: .cghidEventTap)
+        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false)?.post(tap: .cgSessionEventTap)
     }
     
     func toggleEnabled() { isEnabled.toggle() }

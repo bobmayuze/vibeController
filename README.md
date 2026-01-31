@@ -11,6 +11,8 @@
 - **Background Operation** - IOKit HID based, works even when window loses focus
 - **App Switcher** - Hold Back button to switch apps like Cmd+Tab
 - **Profile Wheel** - Press L3 to quickly switch between profiles
+- **Auto Profile Switch** - Automatically switch profile when app changes
+- **App Exposé Mode** - Navigate windows using D-Pad
 - **Customizable Mappings** - Configure any button to any action
 
 ## Quick Start
@@ -58,6 +60,17 @@ Download the latest release from [GitHub Releases](https://github.com/bobmayuze/
 2. **Hold Back + RB** → Next app
 3. **Hold Back + LB** → Previous app
 4. **Release Back** → Confirm selection
+
+## Auto Profile Switch
+
+Automatically switch profiles based on the active app:
+
+1. Enable "Auto Switch Profile" in settings
+2. Click "Manage Associated Apps" for a profile
+3. Select apps to associate with that profile
+4. Set a default profile for apps without associations
+
+When you switch to an associated app, the profile changes automatically with a notification overlay.
 
 ## Permissions
 

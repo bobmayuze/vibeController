@@ -391,6 +391,79 @@ class LocalizationManager: ObservableObject {
                 .japanese: "コンボ",
                 .simplifiedChinese: "个组合键",
                 .traditionalChinese: "個組合鍵"
+            ],
+            // Auto Switch 相关
+            "autoSwitch": [
+                .english: "Auto Switch Profile",
+                .japanese: "プロファイル自動切替",
+                .simplifiedChinese: "自动切换配置",
+                .traditionalChinese: "自動切換配置"
+            ],
+            "autoSwitchHint": [
+                .english: "Automatically switch profile when app changes",
+                .japanese: "アプリが切り替わると自動的にプロファイルを切り替えます",
+                .simplifiedChinese: "当切换应用时自动切换到对应的配置",
+                .traditionalChinese: "當切換應用時自動切換到對應的配置"
+            ],
+            "manageApps": [
+                .english: "Manage Associated Apps",
+                .japanese: "関連付けアプリ管理",
+                .simplifiedChinese: "管理关联应用",
+                .traditionalChinese: "管理關聯應用"
+            ],
+            "manageAppsFor": [
+                .english: "Manage Apps for",
+                .japanese: "アプリ管理：",
+                .simplifiedChinese: "管理应用关联：",
+                .traditionalChinese: "管理應用關聯："
+            ],
+            "searchApps": [
+                .english: "Search apps...",
+                .japanese: "アプリを検索...",
+                .simplifiedChinese: "搜索应用...",
+                .traditionalChinese: "搜尋應用..."
+            ],
+            "associatedApps": [
+                .english: "Associated Apps",
+                .japanese: "関連付けアプリ",
+                .simplifiedChinese: "已关联应用",
+                .traditionalChinese: "已關聯應用"
+            ],
+            "usedBy": [
+                .english: "Used by",
+                .japanese: "使用中：",
+                .simplifiedChinese: "已被使用：",
+                .traditionalChinese: "已被使用："
+            ],
+            "appAssociationHint": [
+                .english: "Each app can only be associated with one profile",
+                .japanese: "各アプリは1つのプロファイルにのみ関連付けできます",
+                .simplifiedChinese: "每个应用只能关联到一个配置",
+                .traditionalChinese: "每個應用只能關聯到一個配置"
+            ],
+            "done": [
+                .english: "Done",
+                .japanese: "完了",
+                .simplifiedChinese: "完成",
+                .traditionalChinese: "完成"
+            ],
+            "loadingApps": [
+                .english: "Loading apps...",
+                .japanese: "アプリを読み込み中...",
+                .simplifiedChinese: "加载应用中...",
+                .traditionalChinese: "載入應用中..."
+            ],
+            "default": [
+                .english: "Default",
+                .japanese: "デフォルト",
+                .simplifiedChinese: "默认",
+                .traditionalChinese: "預設"
+            ],
+            "makeDefault": [
+                .english: "Make Default",
+                .japanese: "デフォルトに設定",
+                .simplifiedChinese: "设为默认",
+                .traditionalChinese: "設為預設"
             ]
         ]
         
@@ -1903,6 +1976,145 @@ struct DonutSegment: Shape {
     }
 }
 
+// MARK: - App Exposé 模式 Overlay 控制器
+
+@MainActor
+class AppExposeOverlayController: NSObject, ObservableObject {
+    static let shared = AppExposeOverlayController()
+    
+    private var window: NSWindow?
+    private var hideTimer: Timer?
+    
+    func show() {
+        // 取消之前的隐藏定时器
+        hideTimer?.invalidate()
+        
+        if window == nil {
+            createWindow()
+        }
+        
+        window?.orderFront(nil)
+        
+        // 添加淡入动画
+        window?.alphaValue = 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.2
+            window?.animator().alphaValue = 1
+        }
+    }
+    
+    func hide() {
+        hideTimer?.invalidate()
+        
+        // 添加淡出动画
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = 0.2
+            window?.animator().alphaValue = 0
+        }, completionHandler: {
+            self.window?.orderOut(nil)
+        })
+    }
+    
+    private func createWindow() {
+        // 获取鼠标所在的屏幕
+        let mouseLocation = NSEvent.mouseLocation
+        var targetScreen: NSScreen = NSScreen.main ?? NSScreen.screens.first!
+        for s in NSScreen.screens {
+            if s.frame.contains(mouseLocation) {
+                targetScreen = s
+                break
+            }
+        }
+        
+        let screenFrame = targetScreen.frame
+        let windowWidth: CGFloat = 320
+        let windowHeight: CGFloat = 100
+        
+        // 屏幕顶部居中
+        let windowFrame = NSRect(
+            x: screenFrame.midX - windowWidth / 2,
+            y: screenFrame.maxY - windowHeight - 80,  // 距离顶部 80pt
+            width: windowWidth,
+            height: windowHeight
+        )
+        
+        window = NSWindow(
+            contentRect: windowFrame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        
+        guard let window = window else { return }
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.level = .screenSaver
+        window.hasShadow = true
+        window.ignoresMouseEvents = true
+        
+        let overlayView = AppExposeOverlayView()
+        let hosting = NSHostingView(rootView: overlayView)
+        window.contentView = hosting
+    }
+}
+
+// MARK: - App Exposé Overlay 视图
+
+struct AppExposeOverlayView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("App Exposé")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.white)
+            
+            HStack(spacing: 24) {
+                // D-Pad - Select
+                HStack(spacing: 8) {
+                    Image("DPad")
+                        .resizable()
+                        .renderingMode(.template)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 26, height: 26)
+                        .foregroundColor(.white.opacity(0.9))
+                    Text("Select")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                
+                // A - Confirm
+                HStack(spacing: 8) {
+                    Image("BtnA")
+                        .resizable()
+                        .renderingMode(.template)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.green)
+                    Text("Confirm")
+                        .font(.system(size: 13, weight: .medium))
+                }
+                
+                // B - Exit
+                HStack(spacing: 8) {
+                    Image("BtnB")
+                        .resizable()
+                        .renderingMode(.template)
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 24, height: 24)
+                        .foregroundColor(.red)
+                    Text("Exit")
+                        .font(.system(size: 13, weight: .medium))
+                }
+            }
+            .foregroundColor(.white.opacity(0.9))
+        }
+        .padding(.horizontal, 32)
+        .padding(.vertical, 20)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.black.opacity(0.88))
+        )
+    }
+}
+
 // MARK: - Profile 轮盘窗口控制器
 
 @MainActor
@@ -2061,6 +2273,7 @@ struct ProfileManagerView: View {
     @State private var editingName: String = ""
     @State private var showingNewProfileAlert = false
     @State private var newProfileName = ""
+    @State private var selectedProfileForApps: ControllerConfig?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -2079,69 +2292,148 @@ struct ProfileManagerView: View {
             
             Divider()
             
+            // Auto Switch 开关
+            HStack {
+                Image(systemName: "arrow.triangle.2.circlepath")
+                    .foregroundColor(.accentColor)
+                Text(l10n.localized("autoSwitch"))
+                    .font(.subheadline)
+                Spacer()
+                Toggle("", isOn: $configManager.autoSwitchEnabled)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.controlBackgroundColor).opacity(0.5))
+            
+            if configManager.autoSwitchEnabled {
+                Text(l10n.localized("autoSwitchHint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+            }
+            
+            Divider()
+            
             // Profile 列表
             List {
                 ForEach(configManager.configs) { config in
-                    HStack {
-                        if editingProfileId == config.id {
-                            TextField("", text: $editingName, onCommit: {
-                                saveRename(config)
-                            })
-                            .textFieldStyle(.roundedBorder)
-                            .frame(width: 150)
-                            
-                            Button(action: { saveRename(config) }) {
-                                Image(systemName: "checkmark")
-                            }
-                            .buttonStyle(.borderless)
-                            
-                            Button(action: { editingProfileId = nil }) {
-                                Image(systemName: "xmark")
-                            }
-                            .buttonStyle(.borderless)
-                        } else {
-                            Image(systemName: config.id == configManager.currentConfig.id ? "checkmark.circle.fill" : "circle")
-                                .foregroundColor(config.id == configManager.currentConfig.id ? .green : .secondary)
-                            
-                            Text(config.name)
-                                .fontWeight(config.id == configManager.currentConfig.id ? .semibold : .regular)
-                            
-                            if config.id == configManager.currentConfig.id {
-                                Text("(\(l10n.localized("current")))")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            // 重命名按钮
-                            Button(action: {
-                                editingProfileId = config.id
-                                editingName = config.name
-                            }) {
-                                Image(systemName: "pencil")
-                            }
-                            .buttonStyle(.borderless)
-                            
-                            // 复制按钮
-                            Button(action: {
-                                let _ = configManager.duplicateConfig(config)
-                            }) {
-                                Image(systemName: "doc.on.doc")
-                            }
-                            .buttonStyle(.borderless)
-                            
-                            // 删除按钮（至少保留一个）
-                            Button(action: {
-                                if configManager.configs.count > 1 {
-                                    configManager.deleteConfig(config)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            if editingProfileId == config.id {
+                                TextField("", text: $editingName, onCommit: {
+                                    saveRename(config)
+                                })
+                                .textFieldStyle(.roundedBorder)
+                                .frame(width: 150)
+                                
+                                Button(action: { saveRename(config) }) {
+                                    Image(systemName: "checkmark")
                                 }
-                            }) {
-                                Image(systemName: "trash")
-                                    .foregroundColor(configManager.configs.count > 1 ? .red : .gray)
+                                .buttonStyle(.borderless)
+                                
+                                Button(action: { editingProfileId = nil }) {
+                                    Image(systemName: "xmark")
+                                }
+                                .buttonStyle(.borderless)
+                            } else {
+                                Image(systemName: config.id == configManager.currentConfig.id ? "checkmark.circle.fill" : "circle")
+                                    .foregroundColor(config.id == configManager.currentConfig.id ? .green : .secondary)
+                                
+                                Text(config.name)
+                                    .fontWeight(config.id == configManager.currentConfig.id ? .semibold : .regular)
+                                
+                                Spacer()
+                                
+                                // 设为默认按钮
+                                if configManager.isDefaultProfile(config) {
+                                    Text(l10n.localized("default"))
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.white)
+                                        .cornerRadius(4)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .stroke(Color.accentColor, lineWidth: 1)
+                                        )
+                                } else {
+                                    Button(action: {
+                                        configManager.setDefaultProfile(config)
+                                    }) {
+                                        Text(l10n.localized("makeDefault"))
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .buttonStyle(.borderless)
+                                }
+                                
+                                // 管理关联应用按钮
+                                Button(action: {
+                                    selectedProfileForApps = config
+                                }) {
+                                    HStack(spacing: 2) {
+                                        Image(systemName: "app.badge")
+                                        if !config.associatedApps.isEmpty {
+                                            Text("\(config.associatedApps.count)")
+                                                .font(.caption)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.borderless)
+                                .help(l10n.localized("manageApps"))
+                                
+                                // 重命名按钮
+                                Button(action: {
+                                    editingProfileId = config.id
+                                    editingName = config.name
+                                }) {
+                                    Image(systemName: "pencil")
+                                }
+                                .buttonStyle(.borderless)
+                                
+                                // 复制按钮
+                                Button(action: {
+                                    let _ = configManager.duplicateConfig(config)
+                                }) {
+                                    Image(systemName: "doc.on.doc")
+                                }
+                                .buttonStyle(.borderless)
+                                
+                                // 删除按钮（至少保留一个）
+                                Button(action: {
+                                    if configManager.configs.count > 1 {
+                                        configManager.deleteConfig(config)
+                                    }
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(configManager.configs.count > 1 ? .red : .gray)
+                                }
+                                .buttonStyle(.borderless)
+                                .disabled(configManager.configs.count <= 1)
                             }
-                            .buttonStyle(.borderless)
-                            .disabled(configManager.configs.count <= 1)
+                        }
+                        
+                        // 显示关联的应用
+                        if !config.associatedApps.isEmpty && editingProfileId != config.id {
+                            HStack(spacing: 4) {
+                                ForEach(config.associatedApps.prefix(3), id: \.self) { bundleId in
+                                    if let appIcon = getAppIcon(bundleId: bundleId) {
+                                        Image(nsImage: appIcon)
+                                            .resizable()
+                                            .frame(width: 16, height: 16)
+                                    }
+                                }
+                                if config.associatedApps.count > 3 {
+                                    Text("+\(config.associatedApps.count - 3)")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.leading, 24)
                         }
                     }
                     .contentShape(Rectangle())
@@ -2171,7 +2463,7 @@ struct ProfileManagerView: View {
             }
             .padding()
         }
-        .frame(width: 400, height: 350)
+        .frame(width: 450, height: 420)
         .alert(l10n.localized("newProfile"), isPresented: $showingNewProfileAlert) {
             TextField(l10n.localized("profileName"), text: $newProfileName)
             Button(l10n.localized("cancel"), role: .cancel) { newProfileName = "" }
@@ -2183,6 +2475,9 @@ struct ProfileManagerView: View {
                 }
             }
         }
+        .sheet(item: $selectedProfileForApps) { config in
+            AppAssociationView(config: config, configManager: configManager, l10n: l10n)
+        }
     }
     
     private func saveRename(_ config: ControllerConfig) {
@@ -2192,6 +2487,336 @@ struct ProfileManagerView: View {
             configManager.updateConfig(updated)
         }
         editingProfileId = nil
+    }
+    
+    private func getAppIcon(bundleId: String) -> NSImage? {
+        guard let appUrl = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+            return nil
+        }
+        return NSWorkspace.shared.icon(forFile: appUrl.path)
+    }
+}
+
+// MARK: - 应用关联管理视图
+
+@MainActor
+struct AppAssociationView: View {
+    let config: ControllerConfig
+    @ObservedObject var configManager: ConfigManager
+    @ObservedObject var l10n: LocalizationManager
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var installedApps: [AppInfo] = []
+    @State private var searchText = ""
+    @State private var isLoading = true
+    
+    struct AppInfo: Identifiable {
+        let id: String  // bundleId
+        let name: String
+        let icon: NSImage?
+        let path: String
+        var isAssociated: Bool
+        var associatedProfileName: String?
+        var isRunning: Bool
+    }
+    
+    var filteredApps: [AppInfo] {
+        let apps = searchText.isEmpty ? installedApps : installedApps.filter { 
+            $0.name.localizedCaseInsensitiveContains(searchText) || 
+            $0.id.localizedCaseInsensitiveContains(searchText) 
+        }
+        // 排序：已关联的在前，然后运行中的在前，最后按名称排序
+        return apps.sorted { a, b in
+            if a.isAssociated != b.isAssociated { return a.isAssociated }
+            if a.isRunning != b.isRunning { return a.isRunning }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 标题
+            HStack {
+                Text(l10n.localized("manageAppsFor"))
+                Text(config.name)
+                    .fontWeight(.semibold)
+                Spacer()
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding()
+            
+            Divider()
+            
+            // 搜索框
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField(l10n.localized("searchApps"), text: $searchText)
+                    .textFieldStyle(.plain)
+                if !searchText.isEmpty {
+                    Button(action: { searchText = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(8)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(8)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            
+            // 已关联的应用
+            if !getCurrentAssociatedApps().isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(l10n.localized("associatedApps"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal)
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(getCurrentAssociatedApps(), id: \.self) { bundleId in
+                                AssociatedAppChip(
+                                    bundleId: bundleId,
+                                    onRemove: {
+                                        configManager.removeApp(bundleId, from: config)
+                                        refreshApps()
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                .padding(.bottom, 8)
+                
+                Divider()
+            }
+            
+            // 应用列表
+            if isLoading {
+                Spacer()
+                ProgressView()
+                    .scaleEffect(0.8)
+                Text(l10n.localized("loadingApps"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            } else {
+                List {
+                    ForEach(filteredApps) { app in
+                        HStack {
+                            if let icon = app.icon {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                            } else {
+                                Image(systemName: "app")
+                                    .frame(width: 24, height: 24)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 4) {
+                                    Text(app.name)
+                                    if app.isRunning {
+                                        Circle()
+                                            .fill(Color.green)
+                                            .frame(width: 6, height: 6)
+                                    }
+                                }
+                                Text(app.id)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                            
+                            if let profileName = app.associatedProfileName, !app.isAssociated {
+                                // 已被其他 profile 关联
+                                Text(l10n.localized("usedBy") + " " + profileName)
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                            } else {
+                                Button(action: {
+                                    toggleAppAssociation(app)
+                                }) {
+                                    Image(systemName: app.isAssociated ? "checkmark.circle.fill" : "plus.circle")
+                                        .foregroundColor(app.isAssociated ? .green : .accentColor)
+                                }
+                                .buttonStyle(.borderless)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                .listStyle(.inset)
+            }
+            
+            Divider()
+            
+            // 底部提示
+            HStack {
+                Image(systemName: "info.circle")
+                    .foregroundColor(.secondary)
+                Text(l10n.localized("appAssociationHint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+                Button(l10n.localized("done")) {
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+            }
+            .padding()
+        }
+        .frame(width: 400, height: 450)
+        .onAppear {
+            refreshApps()
+        }
+    }
+    
+    private func getCurrentAssociatedApps() -> [String] {
+        // 从 configManager 获取最新的 config 数据
+        if let currentConfig = configManager.configs.first(where: { $0.id == config.id }) {
+            return currentConfig.associatedApps
+        }
+        return config.associatedApps
+    }
+    
+    private func refreshApps() {
+        isLoading = true
+        
+        Task {
+            let apps = await loadInstalledApps()
+            await MainActor.run {
+                installedApps = apps
+                isLoading = false
+            }
+        }
+    }
+    
+    private func loadInstalledApps() async -> [AppInfo] {
+        let workspace = NSWorkspace.shared
+        let fileManager = FileManager.default
+        
+        // 获取运行中的应用 Bundle ID
+        let runningBundleIds = Set(workspace.runningApplications
+            .filter { $0.activationPolicy == .regular }
+            .compactMap { $0.bundleIdentifier })
+        
+        // 扫描的目录
+        let appDirectories = [
+            "/Applications",
+            "/System/Applications",
+            "/System/Applications/Utilities",
+            NSHomeDirectory() + "/Applications"
+        ]
+        
+        var appDict: [String: AppInfo] = [:]
+        let associatedApps = getCurrentAssociatedApps()
+        
+        for directory in appDirectories {
+            guard let contents = try? fileManager.contentsOfDirectory(atPath: directory) else { continue }
+            
+            for item in contents {
+                guard item.hasSuffix(".app") else { continue }
+                let appPath = (directory as NSString).appendingPathComponent(item)
+                
+                // 读取 Info.plist 获取 Bundle ID
+                let plistPath = (appPath as NSString).appendingPathComponent("Contents/Info.plist")
+                guard let plistData = fileManager.contents(atPath: plistPath),
+                      let plist = try? PropertyListSerialization.propertyList(from: plistData, options: [], format: nil) as? [String: Any],
+                      let bundleId = plist["CFBundleIdentifier"] as? String else {
+                    continue
+                }
+                
+                // 跳过已经添加的（可能有重复）
+                if appDict[bundleId] != nil { continue }
+                
+                // 获取应用名称
+                let appName = plist["CFBundleDisplayName"] as? String 
+                    ?? plist["CFBundleName"] as? String 
+                    ?? (item as NSString).deletingPathExtension
+                
+                // 获取图标
+                let icon = workspace.icon(forFile: appPath)
+                
+                let isAssociated = associatedApps.contains(bundleId)
+                let associatedProfileName = !isAssociated ? configManager.profileNameForApp(bundleId) : nil
+                let isRunning = runningBundleIds.contains(bundleId)
+                
+                appDict[bundleId] = AppInfo(
+                    id: bundleId,
+                    name: appName,
+                    icon: icon,
+                    path: appPath,
+                    isAssociated: isAssociated,
+                    associatedProfileName: associatedProfileName,
+                    isRunning: isRunning
+                )
+            }
+        }
+        
+        return Array(appDict.values)
+    }
+    
+    private func toggleAppAssociation(_ app: AppInfo) {
+        if app.isAssociated {
+            configManager.removeApp(app.id, from: config)
+        } else {
+            configManager.addApp(app.id, to: config)
+        }
+        refreshApps()
+    }
+}
+
+// MARK: - 已关联应用芯片视图
+
+struct AssociatedAppChip: View {
+    let bundleId: String
+    let onRemove: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            if let icon = getAppIcon() {
+                Image(nsImage: icon)
+                    .resizable()
+                    .frame(width: 16, height: 16)
+            }
+            Text(getAppName())
+                .font(.caption)
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Color.accentColor.opacity(0.15))
+        .cornerRadius(12)
+    }
+    
+    private func getAppIcon() -> NSImage? {
+        guard let appUrl = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+            return nil
+        }
+        return NSWorkspace.shared.icon(forFile: appUrl.path)
+    }
+    
+    private func getAppName() -> String {
+        guard let appUrl = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleId) else {
+            return bundleId
+        }
+        return FileManager.default.displayName(atPath: appUrl.path)
     }
 }
 
@@ -2750,16 +3375,19 @@ struct ChordRowView: View {
                         .cornerRadius(3)
                 }
                 
-                Text("+")
-                    .font(.system(size: 9))
-                    .foregroundColor(.secondary)
-                
-                Text(chord.button.shortName)
-                    .font(.system(size: 10, weight: .semibold))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(Color.green.opacity(0.2))
-                    .cornerRadius(3)
+                // 只有当有主按钮时才显示
+                if let button = chord.button {
+                    Text("+")
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                    
+                    Text(button.shortName)
+                        .font(.system(size: 10, weight: .semibold))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                        .background(Color.green.opacity(0.2))
+                        .cornerRadius(3)
+                }
             }
             
             Spacer()
@@ -2841,7 +3469,7 @@ struct UnifiedChordEditorView: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedModifiers: Set<ControllerButton>
-    @State private var selectedButton: ControllerButton
+    @State private var selectedButton: ControllerButton?  // nil 表示纯修饰键组合
     @State private var macModifiers: ModifierKeys
     @State private var selectedKey: KeymapEditorView.KeyOption
     
@@ -2860,7 +3488,7 @@ struct UnifiedChordEditorView: View {
             
         case .edit(let chord), .duplicate(let chord):
             _selectedModifiers = State(initialValue: chord.modifiers)
-            _selectedButton = State(initialValue: chord.button)
+            _selectedButton = State(initialValue: chord.button)  // 可能为 nil
             
             let action = configManager.action(for: chord)
             _macModifiers = State(initialValue: action.modifiers ?? [])
@@ -2912,7 +3540,22 @@ struct UnifiedChordEditorView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
+                Text(localizedTitle("buttonHint"))
+                    .font(.caption)
+                    .foregroundColor(.secondary.opacity(0.8))
+                
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 60))], spacing: 8) {
+                    // "None" 选项 - 纯修饰键组合
+                    Button(action: { selectedButton = nil }) {
+                        Text("None")
+                            .font(.system(size: 12, weight: .medium))
+                            .frame(width: 50, height: 32)
+                            .background(selectedButton == nil ? Color.orange : Color.gray.opacity(0.2))
+                            .foregroundColor(selectedButton == nil ? .white : .primary)
+                            .cornerRadius(6)
+                    }
+                    .buttonStyle(.plain)
+                    
                     ForEach(ButtonChord.modifiableButtons, id: \.self) { button in
                         Button(action: { selectedButton = button }) {
                             Text(button.shortName)
@@ -3039,7 +3682,10 @@ struct UnifiedChordEditorView: View {
     }
     
     private var isSaveDisabled: Bool {
+        // 必须至少有一个修饰键，且 Mac 输出必须有按键
         if selectedModifiers.isEmpty || selectedKey == .none { return true }
+        // 纯修饰键组合必须至少有2个修饰键
+        if selectedButton == nil && selectedModifiers.count < 2 { return true }
         // 检查组合键是否已存在（编辑模式下允许保存自己）
         let newChord = ButtonChord(modifiers: selectedModifiers, button: selectedButton)
         if case .edit(let originalChord) = mode, newChord.id == originalChord.id {
@@ -3057,9 +3703,12 @@ struct UnifiedChordEditorView: View {
     }
     
     private var previewText: String {
-        guard !selectedModifiers.isEmpty else { return selectedButton.shortName }
         let modifierNames = selectedModifiers.sorted { $0.rawValue < $1.rawValue }.map { $0.shortName }.joined(separator: " + ")
-        return "\(modifierNames) + \(selectedButton.shortName)"
+        if let button = selectedButton {
+            return modifierNames.isEmpty ? button.shortName : "\(modifierNames) + \(button.shortName)"
+        } else {
+            return modifierNames.isEmpty ? "—" : modifierNames
+        }
     }
     
     private var macPreviewText: String {
@@ -3123,6 +3772,12 @@ struct UnifiedChordEditorView: View {
                 .japanese: "その後押す",
                 .simplifiedChinese: "然后按",
                 .traditionalChinese: "然後按"
+            ],
+            "buttonHint": [
+                .english: "Select \"None\" to trigger when all modifiers are pressed",
+                .japanese: "「None」を選ぶと修飾キーのみで発動",
+                .simplifiedChinese: "选择\"None\"可在按下所有修饰键时直接触发",
+                .traditionalChinese: "選擇\"None\"可在按下所有修飾鍵時直接觸發"
             ],
             "preview": [
                 .english: "Combo:",

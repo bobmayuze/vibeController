@@ -313,6 +313,11 @@ SWIFT_CLASS("_TtC15Vibe_Controller11AppDelegate")
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
+SWIFT_CLASS("_TtC15Vibe_Controller26AppExposeOverlayController")
+@interface AppExposeOverlayController : NSObject
+- (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
+@end
+
 SWIFT_CLASS("_TtC15Vibe_Controller28ProfileWheelWindowController")
 @interface ProfileWheelWindowController : NSObject
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;

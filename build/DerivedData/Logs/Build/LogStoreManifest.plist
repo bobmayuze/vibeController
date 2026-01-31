@@ -5,6 +5,49 @@
 	<key>logFormatVersion</key>
 	<integer>12</integer>
 	<key>logs</key>
-	<dict/>
+	<dict>
+		<key>FED705F8-0510-4B03-B0B4-F87F70A31371</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>FED705F8-0510-4B03-B0B4-F87F70A31371.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>2</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>VibeController project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>VibeController</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Building project VibeController with scheme VibeController and configuration Release</string>
+			<key>timeStartedRecording</key>
+			<real>791573790.25721002</real>
+			<key>timeStoppedRecording</key>
+			<real>791573807.91785395</real>
+			<key>title</key>
+			<string>Building project VibeController with scheme VibeController and configuration Release</string>
+			<key>uniqueIdentifier</key>
+			<string>FED705F8-0510-4B03-B0B4-F87F70A31371</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

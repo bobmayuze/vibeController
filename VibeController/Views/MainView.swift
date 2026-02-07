@@ -3004,81 +3004,80 @@ struct KeymapEditorView: View {
             
             Divider()
             
-            // 表单内容
-            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 12) {
+            // 表单内容 - 使用 Form 风格的垂直布局，避免标签被挤压
+            VStack(alignment: .leading, spacing: 12) {
                 // 动作类型选择
-                GridRow {
-                    Text(localizedTitle("actionType"))
-                        .gridColumnAlignment(.leading)
-                    Picker("", selection: $actionType) {
-                        Text(localizedTitle("mouseClick")).tag(ActionType.mouseClick)
-                        Text(localizedTitle("mouseDrag")).tag(ActionType.mouseDrag)
-                        Text(localizedTitle("shortcut")).tag(ActionType.shortcut)
-                        Text(localizedTitle("profileWheel")).tag(ActionType.profileWheel)
-                        Text(localizedTitle("noAction")).tag(ActionType.none)
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
+                Text(localizedTitle("actionType"))
+                    .foregroundColor(.secondary)
+                    .font(.caption)
+                Picker("", selection: $actionType) {
+                    Text(localizedTitle("mouseClick")).tag(ActionType.mouseClick)
+                    Text(localizedTitle("mouseDrag")).tag(ActionType.mouseDrag)
+                    Text(localizedTitle("shortcut")).tag(ActionType.shortcut)
+                    Text(localizedTitle("profileWheel")).tag(ActionType.profileWheel)
+                    Text(localizedTitle("noAction")).tag(ActionType.none)
                 }
+                .pickerStyle(.segmented)
+                .labelsHidden()
                 
                 // 根据动作类型显示不同配置
                 switch actionType {
                 case .mouseClick:
-                    GridRow {
-                        Text(localizedTitle("mouseBtn"))
-                        Picker("", selection: $mouseButton) {
-                            Text(localizedTitle("leftBtn")).tag(MouseButton.left)
-                            Text(localizedTitle("rightBtn")).tag(MouseButton.right)
-                            Text(localizedTitle("middleBtn")).tag(MouseButton.middle)
-                        }
-                        .pickerStyle(.segmented)
-                        .labelsHidden()
+                    Text(localizedTitle("mouseBtn"))
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    Picker("", selection: $mouseButton) {
+                        Text(localizedTitle("leftBtn")).tag(MouseButton.left)
+                        Text(localizedTitle("rightBtn")).tag(MouseButton.right)
+                        Text(localizedTitle("middleBtn")).tag(MouseButton.middle)
                     }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
                 case .shortcut:
-                    GridRow {
-                        Text(localizedTitle("modifiers"))
-                        HStack(spacing: 8) {
-                            ModifierToggle(label: "⌘", isOn: Binding(
-                                get: { modifiers.contains(.command) },
-                                set: { if $0 { modifiers.insert(.command) } else { modifiers.remove(.command) } }
-                            ))
-                            ModifierToggle(label: "⌥", isOn: Binding(
-                                get: { modifiers.contains(.option) },
-                                set: { if $0 { modifiers.insert(.option) } else { modifiers.remove(.option) } }
-                            ))
-                            ModifierToggle(label: "⌃", isOn: Binding(
-                                get: { modifiers.contains(.control) },
-                                set: { if $0 { modifiers.insert(.control) } else { modifiers.remove(.control) } }
-                            ))
-                            ModifierToggle(label: "⇧", isOn: Binding(
-                                get: { modifiers.contains(.shift) },
-                                set: { if $0 { modifiers.insert(.shift) } else { modifiers.remove(.shift) } }
-                            ))
-                            Spacer()
-                        }
+                    Text(localizedTitle("modifiers"))
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    HStack(spacing: 8) {
+                        ModifierToggle(label: "⌘", isOn: Binding(
+                            get: { modifiers.contains(.command) },
+                            set: { if $0 { modifiers.insert(.command) } else { modifiers.remove(.command) } }
+                        ))
+                        ModifierToggle(label: "⌥", isOn: Binding(
+                            get: { modifiers.contains(.option) },
+                            set: { if $0 { modifiers.insert(.option) } else { modifiers.remove(.option) } }
+                        ))
+                        ModifierToggle(label: "⌃", isOn: Binding(
+                            get: { modifiers.contains(.control) },
+                            set: { if $0 { modifiers.insert(.control) } else { modifiers.remove(.control) } }
+                        ))
+                        ModifierToggle(label: "⇧", isOn: Binding(
+                            get: { modifiers.contains(.shift) },
+                            set: { if $0 { modifiers.insert(.shift) } else { modifiers.remove(.shift) } }
+                        ))
+                        Spacer()
                     }
-                    GridRow {
-                        Text(localizedTitle("key"))
-                        KeyCaptureField(selectedKey: $selectedKey)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    
+                    Text(localizedTitle("key"))
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                    KeyCaptureField(selectedKey: $selectedKey)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 case .mouseDrag, .profileWheel, .none, .command, .text, .mouseMove, .scroll:
                     EmptyView()
                 }
                 
                 // 预览
-                GridRow {
+                HStack {
                     Text(localizedTitle("preview"))
                         .foregroundColor(.secondary)
-                    HStack {
-                        Spacer()
-                        Text(previewText)
-                            .font(.system(.body, design: .monospaced))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(6)
-                    }
+                        .font(.caption)
+                    Spacer()
+                    Text(previewText)
+                        .font(.system(.body, design: .monospaced))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(6)
                 }
             }
             
@@ -3103,7 +3102,7 @@ struct KeymapEditorView: View {
             }
         }
         .padding(20)
-        .frame(width: 400, height: 320)
+        .frame(minWidth: 360, idealWidth: 400)
     }
     
     
@@ -3591,53 +3590,47 @@ struct UnifiedChordEditorView: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
-                Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 8) {
-                    GridRow {
-                        Text(localizedTitle("macModifiers"))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        HStack(spacing: 6) {
-                            ModifierToggle(label: "⌘", isOn: Binding(
-                                get: { macModifiers.contains(.command) },
-                                set: { if $0 { macModifiers.insert(.command) } else { macModifiers.remove(.command) } }
-                            ))
-                            ModifierToggle(label: "⌥", isOn: Binding(
-                                get: { macModifiers.contains(.option) },
-                                set: { if $0 { macModifiers.insert(.option) } else { macModifiers.remove(.option) } }
-                            ))
-                            ModifierToggle(label: "⌃", isOn: Binding(
-                                get: { macModifiers.contains(.control) },
-                                set: { if $0 { macModifiers.insert(.control) } else { macModifiers.remove(.control) } }
-                            ))
-                            ModifierToggle(label: "⇧", isOn: Binding(
-                                get: { macModifiers.contains(.shift) },
-                                set: { if $0 { macModifiers.insert(.shift) } else { macModifiers.remove(.shift) } }
-                            ))
-                            Spacer()
-                        }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(localizedTitle("macModifiers"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        ModifierToggle(label: "⌘", isOn: Binding(
+                            get: { macModifiers.contains(.command) },
+                            set: { if $0 { macModifiers.insert(.command) } else { macModifiers.remove(.command) } }
+                        ))
+                        ModifierToggle(label: "⌥", isOn: Binding(
+                            get: { macModifiers.contains(.option) },
+                            set: { if $0 { macModifiers.insert(.option) } else { macModifiers.remove(.option) } }
+                        ))
+                        ModifierToggle(label: "⌃", isOn: Binding(
+                            get: { macModifiers.contains(.control) },
+                            set: { if $0 { macModifiers.insert(.control) } else { macModifiers.remove(.control) } }
+                        ))
+                        ModifierToggle(label: "⇧", isOn: Binding(
+                            get: { macModifiers.contains(.shift) },
+                            set: { if $0 { macModifiers.insert(.shift) } else { macModifiers.remove(.shift) } }
+                        ))
+                        Spacer()
                     }
                     
-                    GridRow {
-                        Text(localizedTitle("macKey"))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        KeyCaptureField(selectedKey: $selectedKey)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    Text(localizedTitle("macKey"))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    KeyCaptureField(selectedKey: $selectedKey)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    GridRow {
+                    HStack {
                         Text(localizedTitle("output"))
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        HStack {
-                            Spacer()
-                            Text(macPreviewText)
-                                .font(.system(.body, design: .monospaced))
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Color.green.opacity(0.1))
-                                .cornerRadius(6)
-                        }
+                        Spacer()
+                        Text(macPreviewText)
+                            .font(.system(.body, design: .monospaced))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color.green.opacity(0.1))
+                            .cornerRadius(6)
                     }
                 }
             }
@@ -3662,7 +3655,7 @@ struct UnifiedChordEditorView: View {
             }
         }
         .padding(20)
-        .frame(width: 380, height: 520)
+        .frame(minWidth: 360, idealWidth: 400)
     }
     
     private var titleText: String {

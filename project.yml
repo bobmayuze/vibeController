@@ -33,3 +33,9 @@ targets:
       path: VibeController/Resources/Info.plist
     entitlements:
       path: VibeController/Resources/VibeController.entitlements
+
+schemes:
+  VibeController:
+    build:
+      targets:
+        VibeController: all

@@ -1,0 +1,12 @@
+{
+  "/Users/yuze/Desktop/playground/vibe_controller/VibeController/Models/Action.swift" : {
+    "abi-baseline-json" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/Vibe_Controller.abi.json",
+    "const-values" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/VibeController-primary.swiftconstvalues",
+    "dependencies" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/VibeController-primary.d",
+    "diagnostics" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/VibeController-primary.dia",
+    "objc-header" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/Vibe_Controller-Swift.h",
+    "swiftdoc" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/Vibe_Controller.swiftdoc",
+    "swiftmodule" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/Vibe_Controller.swiftmodule",
+    "swiftsourceinfo" : "/Users/yuze/Desktop/playground/vibe_controller/build/DerivedData/Build/Intermediates.noindex/VibeController.build/Release/VibeController.build/Objects-normal/arm64/Vibe_Controller.swiftsourceinfo"
+  }
+}

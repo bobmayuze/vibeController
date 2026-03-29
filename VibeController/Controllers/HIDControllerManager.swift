@@ -172,7 +172,7 @@ class HIDControllerManager: ObservableObject {
                 print("🔘 Back → App Switcher 开始")
                 isAppSwitcherActive = true
                 keyDown(55)
-                pressKey(48, modifiers: .maskCommand)
+                pressKey(48, modifiers: .maskCommand, separateModifiers: false)
             } else if !pressed && wasPressed {
                 print("🔘 Back → App Switcher 结束")
                 isAppSwitcherActive = false
@@ -285,11 +285,11 @@ class HIDControllerManager: ObservableObject {
         if isAppSwitcherActive {
             if btn == .leftBumper {
                 print("🔘 LB → 上一个App")
-                pressKey(48, modifiers: [.maskCommand, .maskShift])
+                pressKey(48, modifiers: [.maskCommand, .maskShift], separateModifiers: false)
                 return
             } else if btn == .rightBumper {
                 print("🔘 RB → 下一个App")
-                pressKey(48, modifiers: .maskCommand)
+                pressKey(48, modifiers: .maskCommand, separateModifiers: false)
                 return
             }
         }
@@ -687,8 +687,10 @@ class HIDControllerManager: ObservableObject {
         return true
     }
     
-    private func pressKey(_ code: Int, modifiers: CGEventFlags = []) {
-        print("   pressKey: code=\(code), modifiers=\(modifiers.rawValue)")
+    /// - separateModifiers: true = 分别发送每个修饰键的 down/up（模拟物理键盘，用于触发系统热键）；
+    ///   false = 只设 flags 不发独立修饰键事件（用于 App Switcher 等修饰键已在外部 hold 的场景）
+    private func pressKey(_ code: Int, modifiers: CGEventFlags = [], separateModifiers: Bool = true) {
+        print("   pressKey: code=\(code), modifiers=\(modifiers.rawValue), separate=\(separateModifiers)")
         
         // 检测 App Exposé 触发 (Control + Down Arrow)
         if modifiers.contains(.maskControl) && code == 125 {
@@ -699,17 +701,15 @@ class HIDControllerManager: ObservableObject {
             }
         }
         
-        if !modifiers.isEmpty {
-            // 有修饰键时：分别模拟每个修饰键的按下/释放，模拟物理键盘的真实行为。
-            // 很多系统级热键监听（输入法切换、语音输入等）依赖修饰键的独立按下事件，
-            // 而非仅检查组合事件中的 flags，所以必须分开发送。
+        if !modifiers.isEmpty && separateModifiers {
             pressKeyWithSeparateModifiers(code: code, modifiers: modifiers)
         } else {
-            // 无修饰键：直接发送
             if let down = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true) {
+                down.flags = modifiers
                 down.post(tap: .cghidEventTap)
             }
             if let up = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false) {
+                up.flags = modifiers
                 up.post(tap: .cghidEventTap)
             }
         }
@@ -770,11 +770,11 @@ class HIDControllerManager: ObservableObject {
     }
     
     private func keyDown(_ code: Int) {
-        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true)?.post(tap: .cgSessionEventTap)
+        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true)?.post(tap: .cghidEventTap)
     }
     
     private func keyUp(_ code: Int) {
-        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false)?.post(tap: .cgSessionEventTap)
+        CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false)?.post(tap: .cghidEventTap)
     }
     
     func toggleEnabled() { isEnabled.toggle() }

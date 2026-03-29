@@ -54,9 +54,11 @@ struct ModifierKeys: OptionSet, Codable, Hashable {
     static let option = ModifierKeys(rawValue: 1 << 1)
     static let control = ModifierKeys(rawValue: 1 << 2)
     static let shift = ModifierKeys(rawValue: 1 << 3)
+    static let fn = ModifierKeys(rawValue: 1 << 4)
     
     var displayString: String {
         var parts: [String] = []
+        if contains(.fn) { parts.append("🌐") }
         if contains(.control) { parts.append("⌃") }
         if contains(.option) { parts.append("⌥") }
         if contains(.shift) { parts.append("⇧") }
@@ -70,8 +72,11 @@ struct ModifierKeys: OptionSet, Codable, Hashable {
         if contains(.option) { flags.insert(.maskAlternate) }
         if contains(.control) { flags.insert(.maskControl) }
         if contains(.shift) { flags.insert(.maskShift) }
+        if contains(.fn) { flags.insert(.maskSecondaryFn) }
         return flags
     }
+    
+    var containsFn: Bool { contains(.fn) }
 }
 
 // MARK: - 动作定义

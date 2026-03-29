@@ -3038,6 +3038,10 @@ struct KeymapEditorView: View {
                         .foregroundColor(.secondary)
                         .font(.caption)
                     HStack(spacing: 8) {
+                        ModifierToggle(label: "🌐", isOn: Binding(
+                            get: { modifiers.contains(.fn) },
+                            set: { if $0 { modifiers.insert(.fn) } else { modifiers.remove(.fn) } }
+                        ))
                         ModifierToggle(label: "⌘", isOn: Binding(
                             get: { modifiers.contains(.command) },
                             set: { if $0 { modifiers.insert(.command) } else { modifiers.remove(.command) } }
@@ -3595,6 +3599,10 @@ struct UnifiedChordEditorView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     HStack(spacing: 6) {
+                        ModifierToggle(label: "🌐", isOn: Binding(
+                            get: { macModifiers.contains(.fn) },
+                            set: { if $0 { macModifiers.insert(.fn) } else { macModifiers.remove(.fn) } }
+                        ))
                         ModifierToggle(label: "⌘", isOn: Binding(
                             get: { macModifiers.contains(.command) },
                             set: { if $0 { macModifiers.insert(.command) } else { macModifiers.remove(.command) } }

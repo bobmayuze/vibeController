@@ -690,78 +690,83 @@ class HIDControllerManager: ObservableObject {
     private func pressKey(_ code: Int, modifiers: CGEventFlags = []) {
         print("   pressKey: code=\(code), modifiers=\(modifiers.rawValue)")
         
-        // 对于系统级快捷键（如 Mission Control, App Exposé），使用 AppleScript
-        // 因为 CGEvent 可能被 macOS 安全机制阻止
-        if shouldUseAppleScript(code: code, modifiers: modifiers) {
-            pressKeyViaAppleScript(code: code, modifiers: modifiers)
-            return
+        // 检测 App Exposé 触发 (Control + Down Arrow)
+        if modifiers.contains(.maskControl) && code == 125 {
+            Task { @MainActor in
+                self.isAppExposeActive = true
+                AppExposeOverlayController.shared.show()
+                print("🎯 App Exposé 模式已激活")
+            }
         }
         
+        if !modifiers.isEmpty {
+            // 有修饰键时：分别模拟每个修饰键的按下/释放，模拟物理键盘的真实行为。
+            // 很多系统级热键监听（输入法切换、语音输入等）依赖修饰键的独立按下事件，
+            // 而非仅检查组合事件中的 flags，所以必须分开发送。
+            pressKeyWithSeparateModifiers(code: code, modifiers: modifiers)
+        } else {
+            // 无修饰键：直接发送
+            if let down = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true) {
+                down.post(tap: .cghidEventTap)
+            }
+            if let up = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false) {
+                up.post(tap: .cghidEventTap)
+            }
+        }
+    }
+    
+    /// 将 CGEventFlags 拆成对应的 modifier key codes
+    private func modifierKeyCodes(for flags: CGEventFlags) -> [(keyCode: CGKeyCode, flag: CGEventFlags)] {
+        var result: [(keyCode: CGKeyCode, flag: CGEventFlags)] = []
+        if flags.contains(.maskSecondaryFn) { result.append((63, .maskSecondaryFn)) }   // Fn
+        if flags.contains(.maskControl) { result.append((59, .maskControl)) }             // Left Control
+        if flags.contains(.maskAlternate) { result.append((58, .maskAlternate)) }         // Left Option
+        if flags.contains(.maskShift) { result.append((56, .maskShift)) }                 // Left Shift
+        if flags.contains(.maskCommand) { result.append((55, .maskCommand)) }             // Left Command
+        return result
+    }
+    
+    /// 模拟物理键盘行为：逐个按下修饰键 → 按主键 → 释放主键 → 逐个释放修饰键
+    /// 发到 .cghidEventTap（HID 层），比 session 层更底层，能被系统热键监听捕获
+    private func pressKeyWithSeparateModifiers(code: Int, modifiers: CGEventFlags) {
+        let modKeys = modifierKeyCodes(for: modifiers)
+        var activeFlags: CGEventFlags = []
+        
+        // 1) 逐个按下修饰键
+        for mod in modKeys {
+            activeFlags.insert(mod.flag)
+            if let event = CGEvent(keyboardEventSource: nil, virtualKey: mod.keyCode, keyDown: true) {
+                event.flags = activeFlags
+                event.post(tap: .cghidEventTap)
+            }
+        }
+        
+        usleep(5000) // 5ms，让系统更新修饰键状态
+        
+        // 2) 按下主键
         if let down = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: true) {
-            down.flags = modifiers
-            down.post(tap: .cgSessionEventTap)
-            print("   ✓ key down posted")
-        } else {
-            print("   ✗ failed to create key down event")
+            down.flags = activeFlags
+            down.post(tap: .cghidEventTap)
         }
+        
+        // 3) 释放主键
         if let up = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(code), keyDown: false) {
-            up.flags = modifiers
-            up.post(tap: .cgSessionEventTap)
-            print("   ✓ key up posted")
-        } else {
-            print("   ✗ failed to create key up event")
-        }
-    }
-    
-    /// 判断是否应该使用 AppleScript 发送按键（用于系统级快捷键）
-    private func shouldUseAppleScript(code: Int, modifiers: CGEventFlags) -> Bool {
-        // Control + 方向键 通常是系统快捷键（Mission Control, App Exposé）
-        let arrowKeys = [123, 124, 125, 126]  // left, right, down, up
-        if modifiers.contains(.maskControl) && arrowKeys.contains(code) {
-            // 检测 App Exposé 触发 (Control + Down Arrow)
-            if code == 125 {
-                Task { @MainActor in
-                    self.isAppExposeActive = true
-                    AppExposeOverlayController.shared.show()
-                    print("🎯 App Exposé 模式已激活")
-                }
-            }
-            return true
-        }
-        return false
-    }
-    
-    /// 使用 AppleScript 发送按键
-    private func pressKeyViaAppleScript(code: Int, modifiers: CGEventFlags) {
-        var modifierString = ""
-        if modifiers.contains(.maskCommand) { modifierString += "command down, " }
-        if modifiers.contains(.maskAlternate) { modifierString += "option down, " }
-        if modifiers.contains(.maskControl) { modifierString += "control down, " }
-        if modifiers.contains(.maskShift) { modifierString += "shift down, " }
-        
-        // 移除末尾的 ", "
-        if modifierString.hasSuffix(", ") {
-            modifierString = String(modifierString.dropLast(2))
+            up.flags = activeFlags
+            up.post(tap: .cghidEventTap)
         }
         
-        let script: String
-        if modifierString.isEmpty {
-            script = "tell application \"System Events\" to key code \(code)"
-        } else {
-            script = "tell application \"System Events\" to key code \(code) using {\(modifierString)}"
-        }
+        usleep(5000)
         
-        print("   AppleScript: \(script)")
-        
-        if let appleScript = NSAppleScript(source: script) {
-            var error: NSDictionary?
-            appleScript.executeAndReturnError(&error)
-            if let error = error {
-                print("   ✗ AppleScript error: \(error)")
-            } else {
-                print("   ✓ AppleScript executed")
+        // 4) 逐个释放修饰键（反序）
+        for mod in modKeys.reversed() {
+            activeFlags.remove(mod.flag)
+            if let event = CGEvent(keyboardEventSource: nil, virtualKey: mod.keyCode, keyDown: false) {
+                event.flags = activeFlags
+                event.post(tap: .cghidEventTap)
             }
         }
+        
+        print("   ✓ key combo posted via separate modifier events (HID tap)")
     }
     
     private func keyDown(_ code: Int) {
